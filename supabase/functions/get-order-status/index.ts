@@ -11,12 +11,12 @@ Deno.serve(async (req: Request) => {
     const orderNumber = requiredString(body.order_number, 50);
     const lookupToken = requiredString(body.lookup_token, 128);
     const lookupHash = await sha256(lookupToken);
-    const { data: order, error } = await db.from("orders")
+    const { data: order, error } = await db.from("divoom_orders")
       .select("id,order_number,lookup_token_hash,order_status,payment_status,subtotal_idr,shipping_cost_idr,total_idr,created_at,expires_at")
       .eq("order_number", orderNumber).eq("lookup_token_hash", lookupHash).maybeSingle();
     if (error || !order) return json(404, { error: "Pesanan tidak ditemukan." });
 
-    const { data: payment } = await db.from("payment_transactions")
+    const { data: payment } = await db.from("divoom_payment_transactions")
       .select("provider_order_id,internal_status")
       .eq("order_id", order.id).maybeSingle();
 
@@ -63,7 +63,7 @@ Deno.serve(async (req: Request) => {
     const { error: expiryError } = await db.rpc("release_expired_order_reservations");
     if (expiryError) throw expiryError;
 
-    const { data: latest, error: latestError } = await db.from("orders")
+    const { data: latest, error: latestError } = await db.from("divoom_orders")
       .select("order_number,order_status,payment_status,subtotal_idr,shipping_cost_idr,total_idr,created_at,expires_at")
       .eq("id", order.id).single();
     if (latestError) throw latestError;
