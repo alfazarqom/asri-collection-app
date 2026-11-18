@@ -7,15 +7,17 @@ Deno.serve(async (req: Request) => {
   try {
     const db = getAdmin();
     if (!(await rateLimit(db, req, "create-payment", 5, 60))) return json(429, { error: "Terlalu banyak permintaan pembayaran." });
+    const { error: expiryError } = await db.rpc("release_expired_order_reservations");
+    if (expiryError) throw expiryError;
     const body = await readJson(req);
     const orderNumber = requiredString(body.order_number, 50);
     const lookupToken = requiredString(body.lookup_token, 128);
     const lookupHash = await sha256(lookupToken);
     const { data: order, error: orderError } = await db.from("orders")
-      .select("id,order_number,lookup_token_hash,total_idr,payment_status,customer_name,customer_email,customer_phone")
+      .select("id,order_number,lookup_token_hash,total_idr,payment_status,expires_at,customer_name,customer_email,customer_phone")
       .eq("order_number", orderNumber).eq("lookup_token_hash", lookupHash).maybeSingle();
     if (orderError || !order) return json(404, { error: "Pesanan tidak ditemukan." });
-    if (order.payment_status !== "pending") return json(409, { error: "Pesanan ini tidak lagi menunggu pembayaran." });
+    if (order.payment_status !== "pending" || (order.expires_at && new Date(order.expires_at).getTime() <= Date.now())) return json(409, { error: "Pesanan ini tidak lagi menunggu pembayaran." });
     const { data: existing } = await db.from("payment_transactions")
       .select("snap_token,snap_redirect_url,gross_amount_idr")
       .eq("order_id", order.id).maybeSingle();
