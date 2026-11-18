@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import { Link, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Check, LoaderCircle, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, Ban, Check, Clock3, HelpCircle, LoaderCircle, Minus, Plus, RotateCcw, ShoppingBag, Trash2, XCircle } from "lucide-react";
 import { createOrder, createPayment, getOrderStatus, getProducts } from "./lib/api";
 
 import type { CartLine, CustomerInput, OrderStatus, Product } from "./types";
 import { formatIDR as money, SHIPPING_IDR as SHIPPING } from "./lib/money";
+import { getOrderStatusLabel, getPaymentStatusView } from "./lib/order-status";
 
 const CART_KEY = "asri-cart-v1";
 const LOOKUP_KEY = "asri-order-lookup-v1";
@@ -78,8 +79,16 @@ function App() {
   function Result() {
     const [params] = useSearchParams(); const orderNumber = params.get("order") || ""; const [status, setStatus] = useState<OrderStatus | null>(null); const [error, setError] = useState("");
     const saved = useMemo(() => { try { return JSON.parse(sessionStorage.getItem(LOOKUP_KEY) || "null") as { order_number: string; lookup_token: string } | null; } catch { return null; } }, []);
-    useEffect(() => { let active = true; if (!saved || saved.order_number !== orderNumber) { setError("Sesi akses pesanan tidak tersedia. Gunakan pelacakan pesanan."); return; } const load = () => getOrderStatus(orderNumber, saved.lookup_token).then(v => { if (active) { setStatus(v); setError(""); } }).catch(e => { if (active) setError(e.message); }); void load(); return () => { active = false; }; }, [orderNumber, saved]);
-    return <section className="section narrow center"><div className="result-icon"><Check size={28}/></div><p className="eyebrow">STATUS PESANAN</p><h1>Terima kasih.</h1>{status ? <><p>Pesanan <b>{status.order_number}</b></p><div className="summary status-summary"><div><span>Status pembayaran</span><b>{status.payment_status}</b></div><div><span>Status pesanan</span><b>{status.order_status}</b></div><div><span>Total</span><b>{money(status.total_idr)}</b></div></div><p className="muted">Status ini berasal dari backend dan dapat berubah setelah notifikasi Midtrans terverifikasi.</p></> : error ? <Notice>{error}</Notice> : <div className="loading"><LoaderCircle className="spin"/> Memeriksa status pembayaran...</div>}<Link className="primary-button" to="/products">Kembali berbelanja</Link></section>;
+    useEffect(() => { let active = true; setStatus(null); setError(""); if (!saved || saved.order_number !== orderNumber) { setError("Sesi akses pesanan tidak tersedia. Gunakan pelacakan pesanan."); return; } const load = () => getOrderStatus(orderNumber, saved.lookup_token).then(v => { if (active) { setStatus(v); setError(""); } }).catch(e => { if (active) setError(e instanceof Error ? e.message : "Status pesanan tidak dapat dimuat."); }); void load(); return () => { active = false; }; }, [orderNumber, saved]);
+    const statusView = status ? getPaymentStatusView(status.payment_status) : null;
+    const statusIcon = statusView?.icon === "success" ? <Check size={28}/> :
+      statusView?.icon === "pending" ? <Clock3 size={28}/> :
+      statusView?.icon === "failed" ? <XCircle size={28}/> :
+      statusView?.icon === "expired" ? <Clock3 size={28}/> :
+      statusView?.icon === "cancelled" ? <Ban size={28}/> :
+      statusView?.icon === "refund" ? <RotateCcw size={28}/> :
+      statusView?.icon === "problem" ? <AlertTriangle size={28}/> : <HelpCircle size={28}/>;
+    return <section className="section narrow center">{statusView && <div className={"result-icon " + statusView.tone} aria-hidden="true">{statusIcon}</div>}<p className="eyebrow">STATUS PESANAN</p><h1>{statusView?.title ?? (error ? "Status belum dapat diperiksa" : "Memeriksa status pesanan")}</h1>{status && statusView ? <><p>Pesanan <b>{status.order_number}</b></p><div className="summary status-summary"><div><span>Status pembayaran</span><b>{statusView.label}</b></div><div><span>Status pesanan</span><b>{getOrderStatusLabel(status.order_status)}</b></div><div><span>Total</span><b>{money(status.total_idr)}</b></div></div><p className="muted status-description">{statusView.description}</p>{status.order_status === "problem" && <Notice tone="info">Pesanan memerlukan pemeriksaan lebih lanjut oleh tim Asri Collection.</Notice>}</> : error ? <Notice>{error}</Notice> : <div className="loading"><LoaderCircle className="spin"/> Memeriksa status pembayaran...</div>}<Link className="primary-button" to="/products">Kembali berbelanja</Link></section>;
   }
   function Tracking() {
     const [number, setNumber] = useState(""); const [token, setToken] = useState(""); const [result, setResult] = useState<OrderStatus | null>(null); const [error, setError] = useState(""); const [busy, setBusy] = useState(false);
