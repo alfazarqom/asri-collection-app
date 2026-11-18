@@ -15,7 +15,7 @@ Deno.serve(async (req: Request) => {
     if (!orderId || !statusCode || !grossAmount || !signature || !(await verifyMidtransSignature(orderId, statusCode, grossAmount, signature))) {
       return json(401, { error: "Invalid notification signature" });
     }
-    const { data: payment, error } = await db.from("payment_transactions")
+    const { data: payment, error } = await db.from("divoom_payment_transactions")
       .select("id,order_id,provider_order_id,gross_amount_idr")
       .eq("provider_order_id", orderId).maybeSingle();
     if (error || !payment) return json(404, { error: "Transaction not found" });
