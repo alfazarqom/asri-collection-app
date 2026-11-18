@@ -40,3 +40,19 @@ jobs:
           deno check supabase/functions/create-midtrans-payment/index.ts
           deno check supabase/functions/midtrans-notification/index.ts
           deno check supabase/functions/get-order-status/index.ts
+
+
+  database-migration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Start isolated local Supabase
+        run: supabase start -x studio,imgproxy,logflare,vector,supavisor
+      - name: Apply migrations to clean local database
+        run: supabase db reset
+      - name: Stop local Supabase
+        if: always()
+        run: supabase stop --no-backup
