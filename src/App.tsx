@@ -3,7 +3,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, Route, Routes, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Check, LoaderCircle, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import { createOrder, createPayment, getOrderStatus, getProducts } from "./lib/api";
-import { backendConfigMessage, hasBackendConfig } from "./lib/supabase";
+
 import type { CartLine, CustomerInput, OrderStatus, Product } from "./types";
 import { formatIDR as money, SHIPPING_IDR as SHIPPING } from "./lib/money";
 
