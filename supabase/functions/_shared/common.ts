@@ -47,8 +47,9 @@ export function randomToken(): string {
   return Array.from(bytes).map(x => x.toString(16).padStart(2, "0")).join("");
 }
 export function clientIp(req: Request): string {
-  const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return forwarded || req.headers.get("cf-connecting-ip") || "unknown";
+  const trustedEdgeIp = req.headers.get("cf-connecting-ip");
+  const forwarded = req.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim();
+  return trustedEdgeIp || forwarded || "unknown";
 }
 export async function rateLimit(db: SupabaseClient, req: Request, scope: string, limit: number, seconds: number): Promise<boolean> {
   const key = await sha256(scope + ":" + clientIp(req));
