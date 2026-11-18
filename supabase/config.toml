@@ -1,4 +1,4 @@
-# Asri Collection — local Supabase CLI configuration
+# Asri Collection — local Supabase CLI configuration.
 # Local development only. This does not link or deploy a project.
 project_id = "asri-collection"
 
@@ -18,6 +18,8 @@ major_version = 17
 enabled = true
 port = 54323
 
+# Public catalog, guest checkout and provider webhook functions use application-level
+# validation and service-role-only database RPCs. Do not interpret this as public DB access.
 [functions.get-asri-products]
 verify_jwt = false
 
