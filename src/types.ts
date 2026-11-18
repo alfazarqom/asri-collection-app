@@ -11,7 +11,7 @@ export type Product = {
   stock_quantity: number;
 };
 
-export type CartLine = { product: Product; quantity: number };
+export type CartLine = { product: Product; quantity: number; selected_options?: Record<string, string> };
 export type CustomerInput = {
   name: string;
   email: string;
