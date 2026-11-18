@@ -154,6 +154,7 @@ create index if not exists orders_created_at_idx on public.orders (created_at de
 create index if not exists orders_payment_status_idx on public.orders (payment_status);
 create index if not exists order_items_order_id_idx on public.order_items (order_id);
 create index if not exists payment_transactions_order_id_idx on public.payment_transactions (order_id);
+create unique index if not exists payment_transactions_one_per_order_idx on public.payment_transactions (order_id);
 create index if not exists payment_callback_events_received_at_idx on public.payment_callback_events (received_at desc);
 
 create or replace function public.set_updated_at()
@@ -276,10 +277,11 @@ begin
   v_order_number := 'ASRI-' || to_char(now(), 'YYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8));
   insert into public.orders (
     order_number, lookup_token_hash, customer_name, customer_email, customer_phone,
-    shipping_address, subtotal_idr, shipping_cost_idr, total_idr
+    shipping_address, subtotal_idr, shipping_cost_idr, total_idr, expires_at
   ) values (
     v_order_number, p_lookup_token_hash, trim(p_customer->>'name'), lower(trim(p_customer->>'email')),
-    trim(p_customer->>'phone'), p_shipping_address, v_subtotal, v_shipping, v_subtotal + v_shipping
+    trim(p_customer->>'phone'), p_shipping_address, v_subtotal, v_shipping, v_subtotal + v_shipping,
+    now() + interval '24 hours'
   ) returning id into v_order_id;
 
   for v_item in select value from jsonb_array_elements(v_lines)
@@ -298,6 +300,44 @@ begin
     'shipping_cost_idr', v_shipping,
     'total_idr', v_subtotal + v_shipping
   );
+end;
+$function$;
+
+create or replace function public.release_expired_order_reservations()
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+  v_count integer := 0;
+begin
+  for v_order in
+    select * from public.orders
+    where payment_status = 'pending'
+      and expires_at is not null
+      and expires_at <= now()
+      and stock_released = false
+    for update skip locked
+  loop
+    for v_item in select product_id, quantity from public.order_items
+      where order_id = v_order.id and product_id is not null
+    loop
+      update public.products set stock_quantity = stock_quantity + v_item.quantity
+      where id = v_item.product_id;
+    end loop;
+    update public.orders set
+      payment_status = 'expired',
+      order_status = 'cancelled',
+      stock_released = true
+    where id = v_order.id;
+    update public.payment_transactions set internal_status = 'expired', transaction_status = coalesce(transaction_status, 'expire')
+    where order_id = v_order.id and internal_status = 'pending';
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
 end;
 $function$;
 
@@ -424,9 +464,11 @@ grant all on public.products, public.orders, public.order_items,
 
 revoke all on function public.consume_api_rate_limit(text, integer, integer) from public, anon, authenticated;
 revoke all on function public.create_order_atomic(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
+revoke all on function public.release_expired_order_reservations() from public, anon, authenticated;
 revoke all on function public.apply_midtrans_notification(text, text, text, text, text, text, jsonb) from public, anon, authenticated;
 grant execute on function public.consume_api_rate_limit(text, integer, integer) to service_role;
 grant execute on function public.create_order_atomic(jsonb, jsonb, jsonb, text) to service_role;
+grant execute on function public.release_expired_order_reservations() to service_role;
 grant execute on function public.apply_midtrans_notification(text, text, text, text, text, text, jsonb) to service_role;
 
 commit;
