@@ -1,10 +1,13 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
+const configuredOrigin = Deno.env.get("APP_ORIGIN");
+const isProduction = Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": Deno.env.get("APP_ORIGIN") || "*",
+  "Access-Control-Allow-Origin": configuredOrigin || (isProduction ? "null" : "*"),
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Content-Type": "application/json; charset=utf-8"
+  "Content-Type": "application/json; charset=utf-8",
+  "Vary": "Origin"
 };
 
 export function json(status: number, body: unknown): Response {
@@ -16,7 +19,10 @@ export function options(req: Request): Response | null {
 export function getAdmin(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!url || !key) throw new Error("Server configuration unavailable");\n  if (isProduction && (!configuredOrigin || !configuredOrigin.startsWith("https://"))) throw new Error("Production APP_ORIGIN must be HTTPS");
+  if (!url || !key) throw new Error("Server configuration unavailable");
+  if (isProduction && (!configuredOrigin || !configuredOrigin.startsWith("https://"))) {
+    throw new Error("Production APP_ORIGIN must be HTTPS");
+  }
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 export async function readJson(req: Request, maxBytes = 20000): Promise<Record<string, unknown>> {
@@ -63,14 +69,10 @@ export function serverKey(): string {
   return key;
 }
 export function midtransBase(): string {
-  return Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true"
-    ? "https://api.midtrans.com"
-    : "https://api.sandbox.midtrans.com";
+  return isProduction ? "https://api.midtrans.com" : "https://api.sandbox.midtrans.com";
 }
 export function snapBase(): string {
-  return Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true"
-    ? "https://app.midtrans.com"
-    : "https://app.sandbox.midtrans.com";
+  return isProduction ? "https://app.midtrans.com" : "https://app.sandbox.midtrans.com";
 }
 export function toMinorAmount(value: unknown): number {
   if (typeof value !== "string" && typeof value !== "number") throw new Error("Invalid amount");
@@ -80,7 +82,6 @@ export function toMinorAmount(value: unknown): number {
   if (!Number.isSafeInteger(amount)) throw new Error("Invalid amount");
   return amount;
 }
-
 export async function verifyMidtransSignature(orderId: string, statusCode: string, grossAmount: string, signature: string): Promise<boolean> {
   if (!/^[a-f0-9]{128}$/i.test(signature)) return false;
   const input = new TextEncoder().encode(orderId + statusCode + grossAmount + serverKey());
