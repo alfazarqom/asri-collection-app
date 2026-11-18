@@ -1,14 +1,14 @@
 # Supabase Edge Functions — Asri Collection v1.0.0
 
-The five local handlers are implemented in this repository. They are **not deployed** to any Supabase project.
+The five canonical Asri handlers use the `asri-` namespace in this repository. Hosted deployments must use these exact slugs; legacy unprefixed deployments are not canonical and should be retired only after endpoint consumers are switched and verified.
 
 | Function | Public entry | Server responsibility |
 |---|---|---|
-| `get-asri-products` | Yes | Return active, published catalog records only. |
-| `create-order` | Guest checkout | Validate customer/items, reserve stock atomically, calculate IDR totals, save item snapshots and a 24-hour expiry. |
-| `create-midtrans-payment` | Protected by order lookup token | Create/reuse a Snap redirect for the persisted order. |
-| `midtrans-notification` | Provider webhook | Verify SHA-512 signature and amount/order binding, then apply idempotent status transition. |
-| `get-order-status` | Protected by order lookup token | Return minimal order status and reconcile pending payment through Midtrans GET Status with signature verification. |
+| `asri-get-products` | Yes | Return active, published catalog records only. |
+| `asri-create-order` | Guest checkout | Validate customer/items, reserve stock atomically, calculate IDR totals, save item snapshots and a 24-hour expiry. |
+| `asri-create-midtrans-payment` | Protected by order lookup token | Create/reuse a Snap redirect for the persisted order. |
+| `asri-midtrans-notification` | Provider webhook | Verify SHA-512 signature and amount/order binding, then apply idempotent status transition. |
+| `asri-get-order-status` | Protected by order lookup token | Return minimal order status and reconcile pending payment through Midtrans GET Status with signature verification. |
 
 ## Security model
 
@@ -53,7 +53,7 @@ These are defined by the repository migration and are granted to `service_role` 
 ## Verification and deployment boundary
 
 - CI checks the frontend build, unit tests and Deno type checks.
-- SQL migration has not been run against a local or hosted database in this task.
-- No Supabase project was linked, queried, modified or deployed.
+- The Asri schema migration has been applied to the approved Supabase project. The repository is the source of truth for the prefixed function slugs.
+- After renaming function directories, deploy the five `asri-*` slugs and verify their runtime contracts before switching frontend/provider webhook traffic.
 - Configure Edge Function secrets and `APP_ORIGIN`/ `APP_PUBLIC_URL` separately before sandbox testing.
-- Review the actual target database schema before applying the migration. Its preflight deliberately aborts if existing table columns do not match this baseline.
+- Keep all Divoom tables, functions, data and Duitku configuration outside this Asri namespace.
