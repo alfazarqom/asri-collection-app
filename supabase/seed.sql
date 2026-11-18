@@ -1,0 +1,3 @@
+-- Intentionally empty.
+-- Product catalog data must be managed through an authorized product-management
+-- workflow. Do not seed fake products into merchant activation evidence.
