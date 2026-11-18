@@ -7,6 +7,8 @@ Deno.serve(async (req: Request) => {
   try {
     const db = getAdmin();
     if (!(await rateLimit(db, req, "create-order", 8, 60))) return json(429, { error: "Terlalu banyak percobaan checkout." });
+    const { error: expiryError } = await db.rpc("release_expired_order_reservations");
+    if (expiryError) throw expiryError;
     const body = await readJson(req);
     const customer = body.customer as Record<string, unknown>;
     const items = body.items;
