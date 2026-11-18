@@ -41,8 +41,8 @@ Deno.serve(async (req: Request) => {
       p_items: cleanItems,
       p_lookup_token_hash: lookupHash
     });
-    if (error) {
-      console.error("create_order_rpc_error", error.message);
+    if (error || !data?.order_number) {
+      console.error("create_order_rpc_error", error?.message || "missing order result");
       return json(400, { error: "Pesanan tidak dapat dibuat. Periksa stok dan data produk." });
     }
     return json(201, { order: { ...data, lookup_token: lookupToken } });
