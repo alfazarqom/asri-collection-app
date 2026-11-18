@@ -38,23 +38,23 @@ Use existing category/variant structures if they are present and verified. Do no
 
 | Function | Responsibility |
 |---|---|
-| `get-asri-products` | Return the verified public product catalog contract. |
-| `create-order` | Validate customer input, product IDs/options, current prices and stock; calculate shipping and total; persist order and item snapshots. |
-| `create-midtrans-payment` | Create a Midtrans Snap transaction for an existing valid order and persist provider references. |
-| `midtrans-notification` | Verify Midtrans notification server-side, bind it to the order and amount, record the event idempotently and update payment/order state. |
-| `get-order-status` | Return only the permitted order/status information for a valid lookup credential or protected order reference. |
+| `asri-get-products` | Return the verified public product catalog contract. |
+| `asri-create-order` | Validate customer input, product IDs/options, current prices and stock; calculate shipping and total; persist order and item snapshots. |
+| `asri-create-midtrans-payment` | Create a Midtrans Snap transaction for an existing valid order and persist provider references. |
+| `asri-midtrans-notification` | Verify Midtrans notification server-side, bind it to the order and amount, record the event idempotently and update payment/order state. |
+| `asri-get-order-status` | Return only the permitted order/status information for a valid lookup credential or protected order reference. |
 
-These are target responsibilities. Before implementation, compare them with deployed function names and contracts to avoid duplicate endpoints. Existing `get-asri-products` should be inspected rather than replaced on assumption.
+These are target responsibilities. Before implementation, compare them with deployed function names and contracts to avoid duplicate endpoints. Existing `asri-get-products` should be inspected rather than replaced on assumption.
 
 ## 4. Payment lifecycle
 
 1. Customer submits checkout details.
-2. `create-order` reloads authoritative product data and validates stock/availability.
+2. `asri-create-order` reloads authoritative product data and validates stock/availability.
 3. Backend calculates subtotal, flat shipping Rp52.000 and grand total.
 4. Backend persists order and immutable order-item snapshots.
-5. `create-midtrans-payment` creates the Snap transaction using server-only credentials.
+5. `asri-create-midtrans-payment` creates the Snap transaction using server-only credentials.
 6. Frontend opens the Snap payment interface using only the appropriate client-side configuration/token.
-7. Midtrans sends a server notification to `midtrans-notification`.
+7. Midtrans sends a server notification to `asri-midtrans-notification`.
 8. Backend verifies the notification using the official Midtrans verification procedure and checks order identity, amount and transaction consistency.
 9. Backend records the event and applies an idempotent state transition.
 10. Payment result UI reads the latest backend-confirmed status.
