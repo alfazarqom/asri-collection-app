@@ -18,15 +18,17 @@ The application supports guest shopping and checkout, a Supabase-backed product 
 **Requirements:** Node.js 22 or later.
 
 1. Clone the repository and install dependencies.
-2. Copy `.env.example` to `.env.local`.
-3. Set the public Supabase project values in `.env.local`:
+2. Supabase browser configuration is hardcoded directly in `src/lib/supabase.ts`; no `.env` file or `VITE_` variables are required for the Supabase URL or publishable key.
 
-   ```dotenv
-   VITE_SUPABASE_URL=https://mvwflakurihhakdrlteg.supabase.co
-   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_nGBEVnx4ZFHEe-ne3SzeOw_y3Lpt4nd
+   Current configuration:
+
+   ```ts
+   const SUPABASE_URL = "https://mvwflakurihhakdrlteg.supabase.co";
+   const SUPABASE_PUBLISHABLE_KEY =
+     "sb_publishable_nGBEVnx4ZFHEe-ne3SzeOw_y3Lpt4nd";
    ```
 
-4. Start the development server:
+3. Start the development server:
 
    ```sh
    npm install
@@ -80,7 +82,7 @@ The canonical slugs are also declared in `supabase/config.toml`. See [Supabase E
 
 - Local Supabase CLI configuration: `supabase/config.toml`
 - Initial schema migration: `supabase/migrations/20261119000100_initial_asri_schema.sql`
-- Frontend public environment template: `.env.example`
+- Browser Supabase URL and publishable key: hardcoded in `src/lib/supabase.ts`
 - Server-side environment template: `supabase/.env.example`
 
 **Important:** The migration file identifies itself as repository source that has **not** been applied to a Supabase project. The repository alone cannot confirm the current migration state of any remote Supabase project. Review the target database and migration history before applying it; do not treat the presence of the SQL file as proof of deployment.
@@ -93,7 +95,7 @@ The canonical slugs are also declared in `supabase/config.toml`. See [Supabase E
 - Order lookup is protected by a random access token; only its hash is stored by the backend.
 - Midtrans Snap is used as a hosted payment redirect.
 - A browser redirect is not proof of payment. Payment status must come from a verified Midtrans notification or server-side status reconciliation.
-- Service-role and Midtrans server keys must remain in Supabase Edge Function secrets. Never expose them through `VITE_*` variables or commit them.
+- The Supabase publishable key is intended for browser use and is not a secret. Never expose a Supabase service-role/secret key or Midtrans server key in frontend source or commit them.
 
 ## Merchant evidence checklist
 
