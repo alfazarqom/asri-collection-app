@@ -89,11 +89,11 @@
       "asri_payment_callback_events"
     ],
     "edge_functions": [
-      "get-asri-products",
-      "create-order",
-      "create-midtrans-payment",
-      "midtrans-notification",
-      "get-order-status"
+      "asri-get-products",
+      "asri-create-order",
+      "asri-create-midtrans-payment",
+      "asri-midtrans-notification",
+      "asri-get-order-status"
     ],
     "storage_buckets": [
       {"name": "product-images", "access": "public-read"},
