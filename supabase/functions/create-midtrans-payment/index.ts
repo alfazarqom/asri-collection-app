@@ -13,7 +13,7 @@ Deno.serve(async (req: Request) => {
     const orderNumber = requiredString(body.order_number, 50);
     const lookupToken = requiredString(body.lookup_token, 128);
     const lookupHash = await sha256(lookupToken);
-    const { data: order, error: orderError } = await db.from("orders")
+    const { data: order, error: orderError } = await db.from("divoom_orders")
       .select("id,order_number,total_idr,payment_status,expires_at,customer_name,customer_email,customer_phone")
       .eq("order_number", orderNumber).eq("lookup_token_hash", lookupHash).maybeSingle();
     if (orderError || !order) return json(404, { error: "Pesanan tidak ditemukan." });
@@ -21,7 +21,7 @@ Deno.serve(async (req: Request) => {
       return json(409, { error: "Pesanan ini tidak lagi menunggu pembayaran." });
     }
 
-    const { data: existing, error: existingError } = await db.from("payment_transactions")
+    const { data: existing, error: existingError } = await db.from("divoom_payment_transactions")
       .select("id,snap_token,snap_redirect_url,gross_amount_idr")
       .eq("order_id", order.id).maybeSingle();
     if (existingError) throw existingError;
@@ -32,7 +32,7 @@ Deno.serve(async (req: Request) => {
       return json(409, { error: "Nilai transaksi tidak cocok dengan pesanan." });
     }
     if (!existing) {
-      const { error: reserveError } = await db.from("payment_transactions").insert({
+      const { error: reserveError } = await db.from("divoom_payment_transactions").insert({
         order_id: order.id, provider: "midtrans", provider_order_id: order.order_number,
         gross_amount_idr: order.total_idr, internal_status: "pending",
         raw_response: { snap_request_started: false }
@@ -43,7 +43,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const itemRows = await db.from("order_items")
+    const itemRows = await db.from("divoom_order_items")
       .select("product_name,unit_price_idr,quantity").eq("order_id", order.id);
     if (itemRows.error) throw itemRows.error;
     const items = (itemRows.data ?? []).map((item, index) => ({
@@ -82,7 +82,7 @@ Deno.serve(async (req: Request) => {
       console.error("midtrans_snap_error", response.status);
       return json(502, { error: "Midtrans belum dapat membuat sesi pembayaran." });
     }
-    const { error: saveError } = await db.from("payment_transactions").update({
+    const { error: saveError } = await db.from("divoom_payment_transactions").update({
       snap_token: result.token,
       snap_redirect_url: result.redirect_url,
       raw_response: { token_created: true }
