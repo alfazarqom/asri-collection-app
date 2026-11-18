@@ -50,6 +50,63 @@ begin
       raise exception 'Preflight blocked: public.payment_callback_events exists but does not match Asri baseline. Audit and write a dedicated compatibility migration.';
     end if;
   end if;
+
+  if to_regclass('public.api_rate_limits') is not null then
+    select count(*) into v_missing from information_schema.columns
+    where table_schema='public' and table_name='api_rate_limits'
+      and column_name = any(array['key_hash','window_started_at','request_count']);
+    if v_missing <> 3 then
+      raise exception 'Preflight blocked: public.api_rate_limits exists with an incompatible structure.';
+    end if;
+  end if;
+
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='products'
+      and ((column_name='id' and udt_name <> 'uuid')
+        or (column_name='price_idr' and udt_name <> 'int8')
+        or (column_name='stock_quantity' and udt_name <> 'int4')
+        or (column_name in ('images','options') and udt_name <> 'jsonb')
+        or (column_name='published_at' and udt_name <> 'timestamptz'))
+  ) then
+    raise exception 'Preflight blocked: public.products has incompatible column types.';
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='orders'
+      and ((column_name='id' and udt_name <> 'uuid')
+        or (column_name in ('subtotal_idr','shipping_cost_idr','total_idr') and udt_name <> 'int8')
+        or (column_name='shipping_address' and udt_name <> 'jsonb'))
+  ) then
+    raise exception 'Preflight blocked: public.orders has incompatible column types.';
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='order_items'
+      and ((column_name='id' and udt_name <> 'uuid')
+        or (column_name in ('unit_price_idr','line_total_idr') and udt_name <> 'int8')
+        or (column_name='quantity' and udt_name <> 'int4')
+        or (column_name='selected_options' and udt_name <> 'jsonb'))
+  ) then
+    raise exception 'Preflight blocked: public.order_items has incompatible column types.';
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='payment_transactions'
+      and ((column_name='id' and udt_name <> 'uuid')
+        or (column_name='gross_amount_idr' and udt_name <> 'int8')
+        or (column_name='raw_response' and udt_name <> 'jsonb'))
+  ) then
+    raise exception 'Preflight blocked: public.payment_transactions has incompatible column types.';
+  end if;
+  if exists (
+    select 1 from information_schema.columns
+    where table_schema='public' and table_name='payment_callback_events'
+      and ((column_name='id' and udt_name <> 'uuid')
+        or (column_name='payload' and udt_name <> 'jsonb'))
+  ) then
+    raise exception 'Preflight blocked: public.payment_callback_events has incompatible column types.';
+  end if;
 end
 $preflight$;
 
@@ -148,6 +205,13 @@ create table if not exists public.api_rate_limits (
   request_count integer not null default 0 check (request_count >= 0)
 );
 
+create unique index if not exists products_slug_uidx on public.products (slug);
+create unique index if not exists products_sku_uidx on public.products (sku);
+create unique index if not exists orders_order_number_uidx on public.orders (order_number);
+create unique index if not exists orders_lookup_token_hash_uidx on public.orders (lookup_token_hash);
+create unique index if not exists payment_transactions_provider_order_uidx on public.payment_transactions (provider_order_id);
+create unique index if not exists payment_transactions_provider_tx_uidx on public.payment_transactions (provider_transaction_id);
+create unique index if not exists payment_callback_events_event_key_uidx on public.payment_callback_events (provider_event_key);
 create index if not exists products_active_published_idx
   on public.products (published_at desc) where is_active = true;
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
