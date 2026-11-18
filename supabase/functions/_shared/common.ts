@@ -59,7 +59,7 @@ export function clientIp(req: Request): string {
 }
 export async function rateLimit(db: SupabaseClient, req: Request, scope: string, limit: number, seconds: number): Promise<boolean> {
   const key = await sha256(scope + ":" + clientIp(req));
-  const { data, error } = await db.rpc("consume_api_rate_limit", { p_key: key, p_limit: limit, p_window_seconds: seconds });
+  const { data, error } = await db.rpc("asri_consume_api_rate_limit", { p_key: key, p_limit: limit, p_window_seconds: seconds });
   if (error) throw new Error("Rate limiter unavailable");
   return data === true;
 }
