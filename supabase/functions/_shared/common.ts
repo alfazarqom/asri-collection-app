@@ -36,7 +36,7 @@ export function requiredString(value: unknown, max: number): string {
   return result;
 }
 export function isEmail(value: string): boolean {
-  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value) && value.length <= 254;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
 }
 export async function sha256(value: string): Promise<string> {
   const bytes = new TextEncoder().encode(value);
@@ -72,7 +72,7 @@ export function snapBase(): string {
 export function toMinorAmount(value: unknown): number {
   if (typeof value !== "string" && typeof value !== "number") throw new Error("Invalid amount");
   const text = String(value);
-  if (!/^\\d+(?:\\.00)?$/.test(text)) throw new Error("Invalid amount");
+  if (!/^\d+(?:\.00)?$/.test(text)) throw new Error("Invalid amount");
   const amount = Number(text);
   if (!Number.isSafeInteger(amount)) throw new Error("Invalid amount");
   return amount;
