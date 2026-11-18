@@ -4,7 +4,7 @@ The five local handlers are implemented in this repository. They are **not deplo
 
 | Function | Public entry | Server responsibility |
 |---|---|---|
-| `get-asri-products` | Yes | Return active, published catalog records only. |
+| `get-asri-divoom_products` | Yes | Return active, published catalog records only. |
 | `create-order` | Guest checkout | Validate customer/items, reserve stock atomically, calculate IDR totals, save item snapshots and a 24-hour expiry. |
 | `create-midtrans-payment` | Protected by order lookup token | Create/reuse a Snap redirect for the persisted order. |
 | `midtrans-notification` | Provider webhook | Verify SHA-512 signature and amount/order binding, then apply idempotent status transition. |
@@ -15,7 +15,7 @@ The five local handlers are implemented in this repository. They are **not deplo
 - All five functions use `verify_jwt = false` because catalog and guest checkout/webhook calls do not require a customer Supabase session. This is not an authorization control.
 - Each handler validates methods and request payloads. Shared code applies body-size checks, server-side rate limiting and CORS.
 - Rate-limit keys are SHA-256 hashes; no raw IP is persisted in the rate-limit table.
-- Order access uses a cryptographically random lookup token. Only its SHA-256 hash is stored in `orders.lookup_token_hash`.
+- Order access uses a cryptographically random lookup token. Only its SHA-256 hash is stored in `divoom_orders.lookup_token_hash`.
 - Client-supplied prices, totals, stock, payment status and provider IDs are never authoritative.
 - Order creation and stock reservation run inside the database RPC transaction. Reservations expire after 24 hours and are released when a server endpoint runs the expiry routine.
 - Midtrans callback signature is verified using `SHA512(order_id + status_code + gross_amount + ServerKey)`. The expected order and amount are compared with the stored transaction.
