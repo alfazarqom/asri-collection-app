@@ -1,13 +1,11 @@
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2";
 
-const configuredOrigin = Deno.env.get("APP_ORIGIN");
 const isProduction = Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": configuredOrigin || (isProduction ? "null" : "*"),
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
-  "Content-Type": "application/json; charset=utf-8",
-  "Vary": "Origin"
+  "Content-Type": "application/json; charset=utf-8"
 };
 
 export function json(status: number, body: unknown): Response {
@@ -20,9 +18,6 @@ export function getAdmin(): SupabaseClient {
   const url = Deno.env.get("SUPABASE_URL");
   const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (!url || !key) throw new Error("Server configuration unavailable");
-  if (isProduction && (!configuredOrigin || !configuredOrigin.startsWith("https://"))) {
-    throw new Error("Production APP_ORIGIN must be HTTPS");
-  }
   return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
 }
 export async function readJson(req: Request, maxBytes = 20000): Promise<Record<string, unknown>> {
@@ -41,7 +36,7 @@ export function requiredString(value: unknown, max: number): string {
   return result;
 }
 export function isEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254;
+  return /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value) && value.length <= 254;
 }
 export async function sha256(value: string): Promise<string> {
   const bytes = new TextEncoder().encode(value);
@@ -77,7 +72,7 @@ export function snapBase(): string {
 export function toMinorAmount(value: unknown): number {
   if (typeof value !== "string" && typeof value !== "number") throw new Error("Invalid amount");
   const text = String(value);
-  if (!/^\d+(?:\.00)?$/.test(text)) throw new Error("Invalid amount");
+  if (!/^\\d+(?:\\.00)?$/.test(text)) throw new Error("Invalid amount");
   const amount = Number(text);
   if (!Number.isSafeInteger(amount)) throw new Error("Invalid amount");
   return amount;
