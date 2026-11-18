@@ -1,69 +1,83 @@
-# Implementation Status — A-01 to A-04
+# Implementation Status — Asri Collection v1.0.0
 
-**Target branch:** `feature/blueprint-v1`
-**Baseline:** Asri Collection v1.0.0
-**Scope:** Repository code only. No Supabase project was linked or modified.
+**Observed branch:** `main`  
+**Baseline:** Asri Collection v1.0.0  
+**Scope:** Repository implementation and read-only Supabase inspection. No database, secret, merchant, function deployment, payment, or production changes were performed.
 
 ## A-01 — Frontend
 
-Implemented:
-- React 18 + TypeScript + Vite with Tailwind CSS v4.
-- Responsive storefront shell and seven merchant evidence stages: homepage, catalog, detail, cart, checkout, Midtrans hosted payment, and payment result.
-- Product catalog loads from `get-asri-products`; no local/demo product fallback.
-- Product option selection is carried into cart and sent to backend.
-- Cart persists in browser local storage; checkout uses guest customer details.
-- Protected order lookup code is shown after order creation and kept out of URL query strings.
-- Explicit loading, empty, error and unavailable-product states.
+Implemented in the current repository:
+- React 18 + TypeScript + Vite 6 with Tailwind CSS v4.
+- Responsive storefront shell with homepage, catalog, product detail, cart, guest checkout, Midtrans payment handoff, payment result and order tracking.
+- Product catalog is loaded through `asri-get-products`; there is no local/demo product fallback.
+- Product options are carried through cart and submitted to the backend.
+- Cart persists in browser local storage.
+- Guest checkout collects name, email, phone, address, city, province and postal code.
+- Order lookup credentials are retained in the browser session; the lookup token is not placed in the URL.
+- Loading, empty, error and unavailable-product states are rendered.
+- React Router routes are documented in `docs/blueprint.json` and `docs/supabase-architecture.md`.
 
-## A-02 — Supabase Edge Functions
+## A-02 — Local Supabase Edge Functions
 
-Implemented local handlers:
-- `get-asri-products`
-- `create-order`
-- `create-midtrans-payment`
-- `midtrans-notification`
-- `get-order-status`
+The repository contains five prefixed function directories and the frontend invokes these exact slugs:
 
-Shared code covers request size checks, input validation, CORS, service-role client creation, SHA-256 tokens and database-backed rate limits.
+- `asri-get-products`
+- `asri-create-order`
+- `asri-create-midtrans-payment`
+- `asri-midtrans-notification`
+- `asri-get-order-status`
 
-## A-03 — Public endpoint and Midtrans security
+The same slugs are declared in `supabase/config.toml`. Local source uses shared request validation, CORS, rate limiting and service-role access.
 
-Implemented:
-- `verify_jwt = false` remains for public catalog, guest checkout and webhook entry points; handler-level validation and service-role-only RPC permissions provide the application boundary.
-- Client prices/totals are ignored. Order totals and product availability are read and calculated on the server.
-- A random order lookup token is returned once; only its SHA-256 hash is stored.
-- Midtrans notification signature uses SHA-512 over `order_id + status_code + gross_amount + ServerKey`.
-- Callback order ID and amount are matched to the persisted payment transaction.
-- Callback event key is unique; duplicate and stale/out-of-order state changes are ignored.
-- Pending order status can be reconciled through Midtrans GET Status, with signature and amount verification.
-- Browser return URL is not treated as payment proof.
-- Late success after stock has been released is recorded as payment success with order status `problem` for manual resolution.
+## A-03 — Checkout and Midtrans implementation
 
-## A-04 — Database migration
+Implemented in local source:
+- `verify_jwt = false` is configured for the five public/application endpoints; handlers enforce method, payload, order-token and request validation.
+- Backend recalculates product prices, availability, shipping and order totals. Client totals are not trusted.
+- A random order lookup token is returned to the customer; only its SHA-256 hash is stored.
+- Midtrans notification signature verification uses SHA-512 over `order_id + status_code + gross_amount + ServerKey`.
+- Callback order identity and amount are checked against the persisted transaction.
+- Callback event keys and database RPCs provide duplicate-event handling and guarded state transitions.
+- Pending payment can be reconciled through Midtrans status verification.
+- Browser return/redirect is not treated as proof of payment.
+- Late success after stock release is represented as an order problem for manual resolution.
 
-The initial migration now includes:
-- Preflight guards for existing table columns and critical column types. Incompatible existing tables cause an explicit exception rather than being silently accepted.
-- Unique indexes for order lookup/order number, payment provider references, callback event keys and one payment transaction per order.
-- Integer IDR amounts, generated order line totals, RLS and explicit public table privileges.
-- `updated_at` triggers.
-- Atomic `create_order_atomic` RPC with row locks, product availability/option checks, server-side pricing and stock reservation.
-- 24-hour order reservation expiry and `release_expired_order_reservations` RPC.
-- Idempotent `apply_midtrans_notification` RPC and server-only execution grants.
-- `consume_api_rate_limit` RPC with hashed keys.
+These are source-code claims; they do not establish that the same handlers are deployed or correctly configured in the remote project.
 
-## Verification boundary
+## A-04 — Database migration and remote verification
 
-- Frontend unit tests and production build are configured in GitHub Actions.
-- Deno type checks are configured for all five Edge Functions.
-- The workflow result must be checked on the PR head commit before treating these checks as passed.
-- SQL has not been executed against a local database or Supabase project.
-- The migration has not been compared against the live target schema.
-- No secrets, merchant settings, payment transactions, database changes, Edge Function deployments, merges or production deployments were performed.
+Repository migration:
+- File: `supabase/migrations/20261119000100_initial_asri_schema.sql`
+- The file contains the initial Asri schema, preflight guards, RLS, RPCs, stock reservation and payment callback logic.
+- The local file's header says it has not been applied to a Supabase project.
+
+Read-only remote observations on 2026-11-19:
+- Supabase project `mvwflakurihhakdrlteg` is active and its migration history contains `20261118205854_initial_asri_schema`; Asri tables are also present.
+- That remote migration version differs from this repository file's version `20261119000100`. The history entry does not prove byte-for-byte identity with the current repository migration.
+- A second project, `cufvnzqseawjbyangdqg`, is listed as inactive; its migration history could not be inspected.
+- The repository does not identify either project ref as its authoritative/approved target.
+
+**Conclusion:** An Asri schema migration is recorded on the active `mvw...` project, but whether that is the approved target for this repository and whether it is equivalent to the current local migration remain **UNVERIFIED**. Do not claim that the exact repository migration has been applied to the approved target until the project identity and migration contents are reconciled.
+
+## Remote Edge Function deployment observation
+
+The active `mvw...` project's function list currently includes legacy/unprefixed Asri payment slugs (`create-order`, `create-midtrans-payment`, `midtrans-notification`, `get-order-status`) and `get-asri-products`. It does not currently show all five local canonical `asri-*` slugs.
+
+Therefore, local function source/configuration and remote deployed function names are not yet aligned. No deployment or traffic switch was performed.
+
+## CI and verification boundary
+
+- Frontend workflow commands: `npm run typecheck`, `npm test`, `npm run build`.
+- The current `.github/workflows/ci.yml` Edge Function step still points to legacy unprefixed source directories. It must be updated to check the five prefixed directories before CI can be treated as validating the current local function source.
+- The workflow includes a clean local Supabase migration reset job; this is distinct from applying the migration to a hosted project.
+- No claim is made here that current tests or CI have passed unless a corresponding run is separately inspected.
+- No secrets, merchant settings, hosted database changes, Edge Function deployments, sandbox transactions, merges or production deployments were performed.
 
 ## Remaining operational prerequisites
 
-1. Review the migration against the actual target database and resolve any preflight conflict with a dedicated compatibility migration.
-2. Configure `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `MIDTRANS_SERVER_KEY`, `MIDTRANS_IS_PRODUCTION`, `APP_ORIGIN` and `APP_PUBLIC_URL` in the target Edge Function environment.
-3. Configure the Midtrans Payment Notification URL to the deployed `midtrans-notification` endpoint.
-4. Apply the approved migration only after database review and separate authorization.
-5. Run sandbox tests for order creation, payment, notification retries, expiry and late payment recovery.
+1. Confirm the authoritative Supabase project ref for this repository.
+2. Compare the remote migration history and schema against `20261119000100_initial_asri_schema.sql`; resolve any version/content drift before applying anything.
+3. Align the deployed Edge Function slugs with the five canonical local slugs, after explicit deployment approval and consumer/webhook planning.
+4. Update CI's Deno check paths to the current prefixed function directories.
+5. Configure server secrets and Midtrans notification URL only after the target project and deployment plan are confirmed.
+6. Run authorized sandbox tests for order creation, payment, notification retries, expiry and late-payment recovery.
