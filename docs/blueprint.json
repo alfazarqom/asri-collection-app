@@ -49,8 +49,8 @@
             "type": "MainContent",
             "children": [
               {"type": "HomePage", "route": "/"},
-              {"type": "ProductCatalogPage", "route": "/divoom_products"},
-              {"type": "ProductDetailPage", "route": "/divoom_products/:slug"},
+              {"type": "ProductCatalogPage", "route": "/products"},
+              {"type": "ProductDetailPage", "route": "/products/:slug"},
               {"type": "ShoppingCartPage", "route": "/cart"},
               {"type": "CheckoutPage", "route": "/checkout"},
               {"type": "MidtransPaymentPage", "route": "/payment/:orderId"},
@@ -82,14 +82,14 @@
   "supabase": {
     "existing_schema_audit_required_before_migrations": true,
     "conceptual_tables": [
-      "divoom_products",
-      "divoom_orders",
-      "divoom_order_items",
-      "divoom_payment_transactions",
-      "divoom_payment_callback_events"
+      "asri_products",
+      "asri_orders",
+      "asri_order_items",
+      "asri_payment_transactions",
+      "asri_payment_callback_events"
     ],
     "edge_functions": [
-      "get-asri-divoom_products",
+      "get-asri-products",
       "create-order",
       "create-midtrans-payment",
       "midtrans-notification",
