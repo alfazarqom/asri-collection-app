@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Asri Collection",
+  "version": "1.0.0",
+  "status": "approved-baseline",
+  "tagline": "Tampil Elegan, Setiap Hari",
+  "platform": "responsive-web",
+  "frontend": {
+    "framework": "React",
+    "language": "TypeScript",
+    "bundler": "Vite",
+    "styling": "Tailwind CSS"
+  },
+  "backend": {
+    "provider": "Supabase",
+    "database": "PostgreSQL",
+    "storage": "Supabase Storage",
+    "server_logic": "Supabase Edge Functions"
+  },
+  "commerce": {
+    "checkout": "guest",
+    "authentication_required": false,
+    "currency": "IDR",
+    "shipping": {
+      "type": "flat-rate",
+      "amount": 52000
+    },
+    "product_source": "Supabase",
+    "static_product_fallback": false,
+    "server_authoritative_pricing": true
+  },
+  "payment": {
+    "provider": "Midtrans",
+    "integration": "Snap",
+    "status_source_of_truth": "verified-server-notification",
+    "browser_redirect_is_payment_proof": false,
+    "credentials_location": "server-only-environment"
+  },
+  "application": {
+    "children": [
+      {
+        "type": "AppShell",
+        "children": [
+          {
+            "type": "Header",
+            "children": ["Logo", "Search", "CartButton", "ProfileButton"]
+          },
+          {
+            "type": "MainContent",
+            "children": [
+              {"type": "HomePage", "route": "/"},
+              {"type": "ProductCatalogPage", "route": "/products"},
+              {"type": "ProductDetailPage", "route": "/products/:slug"},
+              {"type": "ShoppingCartPage", "route": "/cart"},
+              {"type": "CheckoutPage", "route": "/checkout"},
+              {"type": "MidtransPaymentPage", "route": "/payment/:orderId"},
+              {"type": "PaymentResultPage", "route": "/payment/result/:orderId"},
+              {"type": "OrderTrackingPage", "route": "/order/:orderNumber"}
+            ]
+          },
+          {"type": "Footer"}
+        ]
+      },
+      {
+        "type": "Overlays",
+        "children": ["SearchOverlay", "CartDrawer", "Toast", "Modal"]
+      }
+    ]
+  },
+  "merchant_evidence": {
+    "required_screenshots": [
+      "Homepage",
+      "Product Catalog",
+      "Product Detail",
+      "Shopping Cart",
+      "Checkout",
+      "Midtrans Payment",
+      "Payment Result"
+    ],
+    "must_use_actual_application_screenshots": true
+  },
+  "supabase": {
+    "existing_schema_audit_required_before_migrations": true,
+    "conceptual_tables": [
+      "products",
+      "orders",
+      "order_items",
+      "payment_transactions",
+      "payment_callback_events"
+    ],
+    "edge_functions": [
+      "get-asri-products",
+      "create-order",
+      "create-midtrans-payment",
+      "midtrans-notification",
+      "get-order-status"
+    ],
+    "storage_buckets": [
+      {"name": "product-images", "access": "public-read"},
+      {"name": "banners", "access": "public-read"},
+      {"name": "private-documents", "access": "private"}
+    ]
+  },
+  "change_control": {
+    "database_changes_authorized": false,
+    "secrets_changes_authorized": false,
+    "merchant_configuration_changes_authorized": false,
+    "payment_transactions_authorized": false,
+    "deployment_authorized": false,
+    "merge_authorized": false
+  }
+}
