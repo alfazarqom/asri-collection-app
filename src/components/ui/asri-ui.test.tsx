@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   AsriButton,
@@ -20,7 +19,7 @@ describe("Asri UI wrappers", () => {
   });
 
   it("renders the Asri button variant and content", () => {
-    const markup = renderToStaticMarkup(createElement(AsriButton, { variant: "primary" }, "Lanjutkan"));
+    const markup = renderToStaticMarkup(<AsriButton variant="primary">Lanjutkan</AsriButton>);
     expect(markup).toContain("Lanjutkan");
     expect(markup).toContain("24382c");
   });
@@ -28,12 +27,13 @@ describe("Asri UI wrappers", () => {
   it("renders labelled input, select, checkbox, radio and textarea primitives", () => {
     const markup = renderToStaticMarkup(
       <>
-        {createElement(AsriInput, { label: "Nama", value: "Asri", readOnly: true })}
-        {createElement(AsriSelect, { label: "Ukuran", value: "M", onChange: () => undefined },
-          createElement("option", { value: "M" }, "M"))}
-        {createElement(AsriCheckbox, { label: "Setuju", checked: true, onChange: () => undefined })}
-        {createElement(AsriRadio, { label: "Reguler", name: "shipping", value: "regular", checked: true, onChange: () => undefined })}
-        {createElement(AsriTextarea, { label: "Catatan", value: "Pesan", readOnly: true })}
+        <AsriInput label="Nama" value="Asri" readOnly />
+        <AsriSelect label="Ukuran" value="M" onChange={() => undefined}>
+          <option value="M">M</option>
+        </AsriSelect>
+        <AsriCheckbox label="Setuju" checked onChange={() => undefined} />
+        <AsriRadio label="Reguler" name="shipping" value="regular" checked onChange={() => undefined} />
+        <AsriTextarea label="Catatan" value="Pesan" readOnly />
       </>
     );
     expect(markup).toContain("Nama");
@@ -46,8 +46,8 @@ describe("Asri UI wrappers", () => {
   it("keeps closed overlay wrappers render-safe", () => {
     const markup = renderToStaticMarkup(
       <>
-        {createElement(AsriDrawer, { open: false, onClose: () => undefined }, "Cart")}
-        {createElement(AsriModal, { open: false, onClose: () => undefined, title: "Konfirmasi" }, "Isi dialog")}
+        <AsriDrawer open={false} onClose={() => undefined}>Cart</AsriDrawer>
+        <AsriModal open={false} onClose={() => undefined} title="Konfirmasi">Isi dialog</AsriModal>
       </>
     );
     expect(markup).toBeDefined();
