@@ -464,7 +464,7 @@ begin
   end if;
 
   v_next := case lower(p_transaction_status)
-    when 'settlement' then 'success'
+    when 'settlement' then case when p_fraud_status is null or lower(p_fraud_status) = 'accept' then 'success' else 'problem' end
     when 'capture' then case when p_fraud_status is null or lower(p_fraud_status) = 'accept' then 'success' else 'problem' end
     when 'pending' then 'pending'
     when 'deny' then 'failed'
