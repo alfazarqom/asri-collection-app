@@ -80,3 +80,13 @@ export function toMinorAmount(value: unknown): number {
   if (!Number.isSafeInteger(amount)) throw new Error("Invalid amount");
   return amount;
 }
+
+export async function verifyMidtransSignature(orderId: string, statusCode: string, grossAmount: string, signature: string): Promise<boolean> {
+  if (!/^[a-f0-9]{128}$/i.test(signature)) return false;
+  const input = new TextEncoder().encode(orderId + statusCode + grossAmount + serverKey());
+  const digest = await crypto.subtle.digest("SHA-512", input);
+  const expected = Array.from(new Uint8Array(digest)).map(x => x.toString(16).padStart(2, "0")).join("");
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ signature.toLowerCase().charCodeAt(i);
+  return diff === 0;
+}
