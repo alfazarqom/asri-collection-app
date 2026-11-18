@@ -15,7 +15,7 @@ const saveCart = (cart: CartLine[]) => localStorage.setItem(CART_KEY, JSON.strin
 function Header({ count }: { count: number }) {
   return <header className="site-header"><div className="header-inner"><Link className="brand" to="/">ASRI<span>COLLECTION</span></Link><nav><Link to="/">Beranda</Link><Link to="/products">Koleksi</Link></nav><Link className="cart-link" to="/cart" aria-label="Keranjang"><ShoppingBag size={19}/><span>Keranjang</span><b>{count}</b></Link></div></header>;
 }
-function Footer() { return <footer className="footer"><div><b>ASRI COLLECTION</b><p>Tampil Elegan, Setiap Hari.</p></div><span>© {new Date().getFullYear()} Asri Collection</span></footer>; }
+function Footer() { return <footer className="footer"><div><b>ASRI COLLECTION</b><p>Tampil Elegan, Setiap Hari.</p><Link className="footer-link" to="/order">Lacak pesanan</Link></div><span>© {new Date().getFullYear()} Asri Collection</span></footer>; }
 function Layout({ children, count }: { children: ReactNode; count: number }) { return <><Header count={count}/><main>{children}</main><Footer/></>; }
 function Notice({ children, tone = "error" }: { children: ReactNode; tone?: "error" | "info" }) { return <div className={"notice " + tone} role="status">{children}</div>; }
 function ProductCard({ product, add }: { product: Product; add: (p: Product) => void }) {
