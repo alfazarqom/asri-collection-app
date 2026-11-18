@@ -1,0 +1,30 @@
+name: Storefront UI POC Verification
+
+on:
+  push:
+    branches:
+      - "poc/storefront-ui-v2-tailwind4"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: poc/storefront-ui-v2-tailwind4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install isolated POC dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify dependency tree
+        run: npm ls react react-dom @storefront-ui/react tailwindcss
+      - name: Type check and production build
+        run: npm run build
