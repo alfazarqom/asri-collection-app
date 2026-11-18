@@ -22,8 +22,8 @@ The application supports guest shopping and checkout, a Supabase-backed product 
 3. Set the public Supabase project values in `.env.local`:
 
    ```dotenv
-   VITE_SUPABASE_URL=https://YOUR_PROJECT_REF.supabase.co
-   VITE_SUPABASE_PUBLISHABLE_KEY=YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY
+   VITE_SUPABASE_URL=https://mvwflakurihhakdrlteg.supabase.co
+   VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_nGBEVnx4ZFHEe-ne3SzeOw_y3Lpt4nd
    ```
 
 4. Start the development server:
