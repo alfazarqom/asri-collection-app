@@ -32,7 +32,7 @@ Deno.serve(async (req: Request) => {
       fraud_status: fraudStatus || null, payment_type: paymentType || null,
       status_code: statusCode, gross_amount: grossAmount
     };
-    const { data, error: applyError } = await db.rpc("apply_midtrans_notification", {
+    const { data, error: applyError } = await db.rpc("asri_apply_midtrans_notification", {
       p_event_key: eventKey,
       p_provider_order_id: orderId,
       p_provider_transaction_id: transactionId,
