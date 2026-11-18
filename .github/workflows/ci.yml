@@ -30,16 +30,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Node dependencies for Deno npm resolution
+        run: npm install --no-audit --no-fund
       - uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
       - name: Type check Edge Functions
         run: |
-          deno check supabase/functions/get-asri-products/index.ts
-          deno check supabase/functions/create-order/index.ts
-          deno check supabase/functions/create-midtrans-payment/index.ts
-          deno check supabase/functions/midtrans-notification/index.ts
-          deno check supabase/functions/get-order-status/index.ts
+          deno check supabase/functions/asri-get-products/index.ts
+          deno check supabase/functions/asri-create-order/index.ts
+          deno check supabase/functions/asri-create-midtrans-payment/index.ts
+          deno check supabase/functions/asri-midtrans-notification/index.ts
+          deno check supabase/functions/asri-get-order-status/index.ts
 
 
   database-migration:
