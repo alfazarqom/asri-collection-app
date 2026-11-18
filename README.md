@@ -12,31 +12,31 @@ Responsive storefront for **Asri Collection — Tampil Elegan, Setiap Hari**.
 ## Local frontend
 
 1. Install Node.js 22 or later.
-2. Copy \`.env.example\` to \`.env.local\`.
-3. Set \`VITE_SUPABASE_URL\` and \`VITE_SUPABASE_PUBLISHABLE_KEY\`.
+2. Copy `.env.example` to `.env.local`.
+3. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`.
 4. Install dependencies and run the app:
 
-\`\`\`sh
+```sh
 npm install
 npm run dev
-\`\`\`
+```
 
 Build and checks:
 
-\`\`\`sh
+```sh
 npm run typecheck
 npm test
 npm run build
-\`\`\`
+```
 
 The storefront intentionally has no demo/static product fallback. The catalog shows a configuration/error/empty state when the Supabase-backed product function is unavailable.
 
 ## Supabase local development
 
-- CLI configuration: \`supabase/config.toml\`
-- Migration: \`supabase/migrations/20261119000100_initial_asri_schema.sql\`
-- Edge Function handlers: \`supabase/functions/\`
-- Server-only placeholders: \`supabase/.env.example\`
+- CLI configuration: `supabase/config.toml`
+- Migration: `supabase/migrations/20261119000100_initial_asri_schema.sql`
+- Edge Function handlers: `supabase/functions/`
+- Server-only placeholders: `supabase/.env.example`
 
 Review the migration against the target database before running it. The migration includes preflight guards and is source code only; it has not been applied to a Supabase project.
 
@@ -61,4 +61,4 @@ Capture evidence from the running application and a configured Midtrans sandbox.
 - Service-role and Midtrans server keys must remain server-side.
 - No admin dashboard, database deployment, secrets configuration, merchant dashboard changes or production deployment are included.
 
-See \`docs/\` and \`supabase/functions/README.md\` for architecture and contracts.
+See `docs/` and `supabase/functions/README.md` for architecture and contracts.
