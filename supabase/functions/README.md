@@ -43,10 +43,10 @@ The Midtrans Snap hosted redirect is used, so the frontend does not need a serve
 
 ## Database RPC dependencies
 
-- `consume_api_rate_limit`
-- `create_order_atomic`
-- `release_expired_order_reservations`
-- `apply_midtrans_notification`
+- `asri_consume_api_rate_limit`
+- `asri_create_order_atomic`
+- `asri_release_expired_order_reservations`
+- `asri_apply_midtrans_notification`
 
 These are defined by the repository migration and are granted to `service_role` only.
 
