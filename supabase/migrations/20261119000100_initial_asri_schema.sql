@@ -153,7 +153,6 @@ create index if not exists products_active_published_idx
 create index if not exists orders_created_at_idx on public.orders (created_at desc);
 create index if not exists orders_payment_status_idx on public.orders (payment_status);
 create index if not exists order_items_order_id_idx on public.order_items (order_id);
-create index if not exists payment_transactions_order_id_idx on public.payment_transactions (order_id);
 create unique index if not exists payment_transactions_one_per_order_idx on public.payment_transactions (order_id);
 create index if not exists payment_callback_events_received_at_idx on public.payment_callback_events (received_at desc);
 
@@ -221,6 +220,7 @@ declare
   v_product_id uuid;
   v_quantity integer;
   v_options jsonb;
+  v_option jsonb;
   v_lines jsonb := '[]'::jsonb;
   v_order_id uuid;
   v_order_number text;
@@ -233,7 +233,258 @@ begin
      or jsonb_typeof(p_items) <> 'array'
      or jsonb_array_length(p_items) < 1
      or jsonb_array_length(p_items) > 30
-     or p_lookup_token_hash !~ '^[a-f0-9]{64}$' then
+     or p_lookup_token_hash is null
+     or p_lookup_token_hash !~ '^[a-f0-9]{64}
+    raise exception 'Invalid order payload';
+  end if;
+  if coalesce(length(trim(p_customer->>'name')), 0) not between 1 and 120
+     or coalesce(length(trim(p_customer->>'email')), 0) not between 3 and 254
+     or coalesce(length(trim(p_customer->>'phone')), 0) not between 7 and 30 then
+    raise exception 'Invalid customer data';
+  end if;
+  if (select count(*) from jsonb_array_elements(p_items)) <>
+     (select count(distinct value->>'product_id') from jsonb_array_elements(p_items)) then
+    raise exception 'Duplicate product lines are not allowed';
+  end if;
+
+  for v_item in select value from jsonb_array_elements(p_items)
+  loop
+    v_product_id := (v_item->>'product_id')::uuid;
+    v_quantity := (v_item->>'quantity')::integer;
+    v_options := coalesce(v_item->'selected_options', '{}'::jsonb);
+    if v_quantity < 1 or v_quantity > 20 or jsonb_typeof(v_options) <> 'object' then
+      raise exception 'Invalid product quantity or options';
+    end if;
+    select * into v_product from public.products where id = v_product_id for update;
+    if not found or not v_product.is_active or v_product.published_at is null or v_product.published_at > now() then
+      raise exception 'Product unavailable';
+    end if;
+    if v_product.stock_quantity < v_quantity then
+      raise exception 'Insufficient stock';
+    end if;
+    if jsonb_typeof(v_product.options) = 'array' then
+      for v_option in select value from jsonb_array_elements(v_product.options)
+      loop
+        if not (v_options ? (v_option->>'name')) or not exists (
+          select 1 from jsonb_array_elements_text(coalesce(v_option->'values', '[]'::jsonb)) as allowed(value)
+          where allowed.value = v_options->>(v_option->>'name')
+        ) then
+          raise exception 'Invalid or missing product option';
+        end if;
+      end loop;
+    end if;
+    update public.products set stock_quantity = stock_quantity - v_quantity where id = v_product.id;
+    v_line_total := v_product.price_idr * v_quantity;
+    v_subtotal := v_subtotal + v_line_total;
+    v_lines := v_lines || jsonb_build_array(jsonb_build_object(
+      'product_id', v_product.id,
+      'product_name', v_product.name,
+      'product_sku', v_product.sku,
+      'selected_options', v_options,
+      'unit_price_idr', v_product.price_idr,
+      'quantity', v_quantity
+    ));
+  end loop;
+
+  v_order_number := 'ASRI-' || to_char(now(), 'YYMMDD') || '-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8));
+  insert into public.orders (
+    order_number, lookup_token_hash, customer_name, customer_email, customer_phone,
+    shipping_address, subtotal_idr, shipping_cost_idr, total_idr, expires_at
+  ) values (
+    v_order_number, p_lookup_token_hash, trim(p_customer->>'name'), lower(trim(p_customer->>'email')),
+    trim(p_customer->>'phone'), p_shipping_address, v_subtotal, v_shipping, v_subtotal + v_shipping,
+    now() + interval '24 hours'
+  ) returning id into v_order_id;
+
+  for v_item in select value from jsonb_array_elements(v_lines)
+  loop
+    insert into public.order_items (
+      order_id, product_id, product_name, product_sku, selected_options, unit_price_idr, quantity
+    ) values (
+      v_order_id, (v_item->>'product_id')::uuid, v_item->>'product_name', v_item->>'product_sku',
+      v_item->'selected_options', (v_item->>'unit_price_idr')::bigint, (v_item->>'quantity')::integer
+    );
+  end loop;
+
+  return jsonb_build_object(
+    'order_number', v_order_number,
+    'subtotal_idr', v_subtotal,
+    'shipping_cost_idr', v_shipping,
+    'total_idr', v_subtotal + v_shipping
+  );
+end;
+$function$;
+
+create or replace function public.release_expired_order_reservations()
+returns integer
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  v_order public.orders%rowtype;
+  v_item record;
+  v_count integer := 0;
+begin
+  for v_order in
+    select * from public.orders
+    where payment_status = 'pending'
+      and expires_at is not null
+      and expires_at <= now()
+      and stock_released = false
+    for update skip locked
+  loop
+    for v_item in select product_id, quantity from public.order_items
+      where order_id = v_order.id and product_id is not null
+    loop
+      update public.products set stock_quantity = stock_quantity + v_item.quantity
+      where id = v_item.product_id;
+    end loop;
+    update public.orders set
+      payment_status = 'expired',
+      order_status = 'cancelled',
+      stock_released = true
+    where id = v_order.id;
+    update public.payment_transactions set internal_status = 'expired', transaction_status = coalesce(transaction_status, 'expire')
+    where order_id = v_order.id and internal_status = 'pending';
+    v_count := v_count + 1;
+  end loop;
+  return v_count;
+end;
+$function$;
+
+create or replace function public.apply_midtrans_notification(
+  p_event_key text,
+  p_provider_order_id text,
+  p_provider_transaction_id text,
+  p_transaction_status text,
+  p_fraud_status text,
+  p_payment_type text,
+  p_payload jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $function$
+declare
+  v_payment public.payment_transactions%rowtype;
+  v_order public.orders%rowtype;
+  v_next text;
+  v_event_rows integer;
+  v_released boolean := false;
+  v_item record;
+  v_result text := 'processed';
+begin
+  if p_event_key !~ '^[a-f0-9]{64}$' or coalesce(p_provider_order_id, '') = ''
+     or coalesce(p_provider_transaction_id, '') = '' then
+    raise exception 'Invalid notification arguments';
+  end if;
+  select * into v_payment from public.payment_transactions
+    where provider_order_id = p_provider_order_id for update;
+  if not found then
+    return jsonb_build_object('status', 'transaction_not_found');
+  end if;
+  select * into v_order from public.orders where id = v_payment.order_id for update;
+
+  insert into public.payment_callback_events (
+    provider_event_key, provider_order_id, provider_transaction_id,
+    signature_valid, processing_status, payload
+  ) values (
+    p_event_key, p_provider_order_id, p_provider_transaction_id,
+    true, 'received', coalesce(p_payload, '{}'::jsonb)
+  ) on conflict (provider_event_key) do nothing;
+  get diagnostics v_event_rows = row_count;
+  if v_event_rows = 0 then
+    return jsonb_build_object('status', 'duplicate');
+  end if;
+
+  v_next := case lower(p_transaction_status)
+    when 'settlement' then 'success'
+    when 'capture' then case when p_fraud_status is null or lower(p_fraud_status) = 'accept' then 'success' else 'problem' end
+    when 'pending' then 'pending'
+    when 'deny' then 'failed'
+    when 'expire' then 'expired'
+    when 'cancel' then 'cancelled'
+    when 'refund' then 'refund'
+    when 'partial_refund' then 'refund'
+    else 'problem'
+  end;
+
+  if v_payment.internal_status = 'refund'
+     or (v_payment.internal_status = 'success' and v_next <> 'refund')
+     or (v_payment.internal_status in ('failed','expired','cancelled') and v_next in ('pending','failed','expired','cancelled')) then
+    v_result := 'ignored_stale';
+  else
+    if v_next in ('failed','expired','cancelled') and not v_order.stock_released then
+      for v_item in select product_id, quantity from public.order_items
+        where order_id = v_order.id and product_id is not null
+      loop
+        update public.products set stock_quantity = stock_quantity + v_item.quantity where id = v_item.product_id;
+      end loop;
+      v_released := true;
+    end if;
+
+    update public.payment_transactions set
+      provider_transaction_id = p_provider_transaction_id,
+      transaction_status = p_transaction_status,
+      fraud_status = p_fraud_status,
+      payment_type = p_payment_type,
+      internal_status = v_next
+    where id = v_payment.id;
+
+    update public.orders set
+      payment_status = v_next,
+      stock_released = stock_released or v_released,
+      order_status = case
+        when v_next = 'success' and (stock_released or v_released) then 'problem'
+        when v_next = 'success' then 'processing'
+        when v_next in ('refund','problem') then 'problem'
+        when v_next in ('failed','expired','cancelled') then 'cancelled'
+        else order_status
+      end
+    where id = v_order.id;
+  end if;
+
+  update public.payment_callback_events set
+    processing_status = case when v_result = 'processed' then 'processed' else 'ignored' end,
+    processed_at = now()
+  where provider_event_key = p_event_key;
+
+  return jsonb_build_object('status', v_result, 'payment_status', case when v_result = 'processed' then v_next else v_payment.internal_status end);
+end;
+$function$;
+
+alter table public.products enable row level security;
+alter table public.orders enable row level security;
+alter table public.order_items enable row level security;
+alter table public.payment_transactions enable row level security;
+alter table public.payment_callback_events enable row level security;
+alter table public.api_rate_limits enable row level security;
+
+drop policy if exists "Public can read active products" on public.products;
+create policy "Public can read active products"
+  on public.products for select to anon, authenticated
+  using (is_active = true and published_at is not null and published_at <= now());
+
+revoke all on public.products, public.orders, public.order_items,
+  public.payment_transactions, public.payment_callback_events, public.api_rate_limits
+  from anon, authenticated;
+grant select on public.products to anon, authenticated;
+grant all on public.products, public.orders, public.order_items,
+  public.payment_transactions, public.payment_callback_events, public.api_rate_limits to service_role;
+
+revoke all on function public.consume_api_rate_limit(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.create_order_atomic(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
+revoke all on function public.release_expired_order_reservations() from public, anon, authenticated;
+revoke all on function public.apply_midtrans_notification(text, text, text, text, text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.consume_api_rate_limit(text, integer, integer) to service_role;
+grant execute on function public.create_order_atomic(jsonb, jsonb, jsonb, text) to service_role;
+grant execute on function public.release_expired_order_reservations() to service_role;
+grant execute on function public.apply_midtrans_notification(text, text, text, text, text, text, jsonb) to service_role;
+
+commit;
+ then
     raise exception 'Invalid order payload';
   end if;
   if coalesce(length(trim(p_customer->>'name')), 0) not between 1 and 120
