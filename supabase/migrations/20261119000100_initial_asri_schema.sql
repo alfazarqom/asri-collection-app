@@ -2,7 +2,7 @@
 -- Repository source only. This migration has NOT been applied to a Supabase project.
 -- Preflight guards abort when existing tables do not match this baseline.
 -- Review the live target schema and use a dedicated compatibility migration if needed.
--- No demo divoom_products, secrets, merchant settings, or payment transactions are inserted.
+-- No demo asri_products, secrets, merchant settings, or payment transactions are inserted.
 
 begin;
 
@@ -10,35 +10,35 @@ do $preflight$
 declare
   v_missing integer;
 begin
-  if to_regclass('public.divoom_products') is not null then
+  if to_regclass('public.asri_products') is not null then
     select count(*) into v_missing
     from information_schema.columns
-    where table_schema = 'public' and table_name = 'divoom_products'
+    where table_schema = 'public' and table_name = 'asri_products'
       and column_name = any(array[
         'id','slug','sku','name','description','price_idr','compare_at_price_idr',
         'currency','images','options','stock_quantity','is_active','published_at',
         'created_at','updated_at'
       ]);
     if v_missing <> 15 then
-      raise exception 'Preflight blocked: public.divoom_products does not match the Asri baseline.';
+      raise exception 'Preflight blocked: public.asri_products does not match the Asri baseline.';
     end if;
     if exists (
       select 1 from information_schema.columns
-      where table_schema = 'public' and table_name = 'divoom_products'
+      where table_schema = 'public' and table_name = 'asri_products'
         and ((column_name = 'id' and udt_name <> 'uuid')
           or (column_name = 'price_idr' and udt_name <> 'int8')
           or (column_name = 'stock_quantity' and udt_name <> 'int4')
           or (column_name in ('images','options') and udt_name <> 'jsonb')
           or (column_name = 'published_at' and udt_name <> 'timestamptz'))
     ) then
-      raise exception 'Preflight blocked: public.divoom_products has incompatible column types.';
+      raise exception 'Preflight blocked: public.asri_products has incompatible column types.';
     end if;
   end if;
 
-  if to_regclass('public.divoom_orders') is not null then
+  if to_regclass('public.asri_orders') is not null then
     select count(*) into v_missing
     from information_schema.columns
-    where table_schema = 'public' and table_name = 'divoom_orders'
+    where table_schema = 'public' and table_name = 'asri_orders'
       and column_name = any(array[
         'id','order_number','lookup_token_hash','customer_name','customer_email',
         'customer_phone','shipping_address','currency','subtotal_idr',
@@ -46,46 +46,46 @@ begin
         'expires_at','created_at','updated_at'
       ]);
     if v_missing <> 16 then
-      raise exception 'Preflight blocked: public.divoom_orders does not match the Asri baseline.';
+      raise exception 'Preflight blocked: public.asri_orders does not match the Asri baseline.';
     end if;
     if exists (
       select 1 from information_schema.columns
-      where table_schema = 'public' and table_name = 'divoom_orders'
+      where table_schema = 'public' and table_name = 'asri_orders'
         and ((column_name = 'id' and udt_name <> 'uuid')
           or (column_name in ('subtotal_idr','shipping_cost_idr','total_idr') and udt_name <> 'int8')
           or (column_name = 'shipping_address' and udt_name <> 'jsonb'))
     ) then
-      raise exception 'Preflight blocked: public.divoom_orders has incompatible column types.';
+      raise exception 'Preflight blocked: public.asri_orders has incompatible column types.';
     end if;
   end if;
 
-  if to_regclass('public.divoom_order_items') is not null then
+  if to_regclass('public.asri_order_items') is not null then
     select count(*) into v_missing
     from information_schema.columns
-    where table_schema = 'public' and table_name = 'divoom_order_items'
+    where table_schema = 'public' and table_name = 'asri_order_items'
       and column_name = any(array[
         'id','order_id','product_id','product_name','product_sku',
         'selected_options','unit_price_idr','quantity','line_total_idr','created_at'
       ]);
     if v_missing <> 10 then
-      raise exception 'Preflight blocked: public.divoom_order_items does not match the Asri baseline.';
+      raise exception 'Preflight blocked: public.asri_order_items does not match the Asri baseline.';
     end if;
     if exists (
       select 1 from information_schema.columns
-      where table_schema = 'public' and table_name = 'divoom_order_items'
+      where table_schema = 'public' and table_name = 'asri_order_items'
         and ((column_name = 'id' and udt_name <> 'uuid')
           or (column_name in ('unit_price_idr','line_total_idr') and udt_name <> 'int8')
           or (column_name = 'quantity' and udt_name <> 'int4')
           or (column_name = 'selected_options' and udt_name <> 'jsonb'))
     ) then
-      raise exception 'Preflight blocked: public.divoom_order_items has incompatible column types.';
+      raise exception 'Preflight blocked: public.asri_order_items has incompatible column types.';
     end if;
   end if;
 
-  if to_regclass('public.divoom_payment_transactions') is not null then
+  if to_regclass('public.asri_payment_transactions') is not null then
     select count(*) into v_missing
     from information_schema.columns
-    where table_schema = 'public' and table_name = 'divoom_payment_transactions'
+    where table_schema = 'public' and table_name = 'asri_payment_transactions'
       and column_name = any(array[
         'id','order_id','provider','provider_order_id','provider_transaction_id',
         'gross_amount_idr','payment_type','transaction_status','fraud_status',
@@ -93,54 +93,54 @@ begin
         'created_at','updated_at'
       ]);
     if v_missing <> 15 then
-      raise exception 'Preflight blocked: public.divoom_payment_transactions does not match the Asri baseline.';
+      raise exception 'Preflight blocked: public.asri_payment_transactions does not match the Asri baseline.';
     end if;
     if exists (
       select 1 from information_schema.columns
-      where table_schema = 'public' and table_name = 'divoom_payment_transactions'
+      where table_schema = 'public' and table_name = 'asri_payment_transactions'
         and ((column_name = 'id' and udt_name <> 'uuid')
           or (column_name = 'gross_amount_idr' and udt_name <> 'int8')
           or (column_name = 'raw_response' and udt_name <> 'jsonb'))
     ) then
-      raise exception 'Preflight blocked: public.divoom_payment_transactions has incompatible column types.';
+      raise exception 'Preflight blocked: public.asri_payment_transactions has incompatible column types.';
     end if;
   end if;
 
-  if to_regclass('public.divoom_payment_callback_events') is not null then
+  if to_regclass('public.asri_payment_callback_events') is not null then
     select count(*) into v_missing
     from information_schema.columns
-    where table_schema = 'public' and table_name = 'divoom_payment_callback_events'
+    where table_schema = 'public' and table_name = 'asri_payment_callback_events'
       and column_name = any(array[
         'id','provider','provider_event_key','provider_order_id',
         'provider_transaction_id','signature_valid','processing_status',
         'payload','processing_error','received_at','processed_at'
       ]);
     if v_missing <> 11 then
-      raise exception 'Preflight blocked: public.divoom_payment_callback_events does not match the Asri baseline.';
+      raise exception 'Preflight blocked: public.asri_payment_callback_events does not match the Asri baseline.';
     end if;
     if exists (
       select 1 from information_schema.columns
-      where table_schema = 'public' and table_name = 'divoom_payment_callback_events'
+      where table_schema = 'public' and table_name = 'asri_payment_callback_events'
         and ((column_name = 'id' and udt_name <> 'uuid')
           or (column_name = 'payload' and udt_name <> 'jsonb'))
     ) then
-      raise exception 'Preflight blocked: public.divoom_payment_callback_events has incompatible column types.';
+      raise exception 'Preflight blocked: public.asri_payment_callback_events has incompatible column types.';
     end if;
   end if;
 
-  if to_regclass('public.divoom_api_rate_limits') is not null then
+  if to_regclass('public.asri_api_rate_limits') is not null then
     select count(*) into v_missing
     from information_schema.columns
-    where table_schema = 'public' and table_name = 'divoom_api_rate_limits'
+    where table_schema = 'public' and table_name = 'asri_api_rate_limits'
       and column_name = any(array['key_hash','window_started_at','request_count']);
     if v_missing <> 3 then
-      raise exception 'Preflight blocked: public.divoom_api_rate_limits has an incompatible structure.';
+      raise exception 'Preflight blocked: public.asri_api_rate_limits has an incompatible structure.';
     end if;
   end if;
 end
 $preflight$;
 
-create table if not exists public.divoom_products (
+create table if not exists public.asri_products (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
   sku text unique,
@@ -158,7 +158,7 @@ create table if not exists public.divoom_products (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.divoom_orders (
+create table if not exists public.asri_orders (
   id uuid primary key default gen_random_uuid(),
   order_number text not null unique,
   lookup_token_hash text not null check (lookup_token_hash ~ '^[a-f0-9]{64}$'),
@@ -180,12 +180,12 @@ create table if not exists public.divoom_orders (
   updated_at timestamptz not null default now(),
   constraint orders_lookup_token_hash_unique unique (lookup_token_hash)
 );
-alter table public.divoom_orders add column if not exists stock_released boolean not null default false;
+alter table public.asri_orders add column if not exists stock_released boolean not null default false;
 
-create table if not exists public.divoom_order_items (
+create table if not exists public.asri_order_items (
   id uuid primary key default gen_random_uuid(),
-  order_id uuid not null references public.divoom_orders(id) on delete restrict,
-  product_id uuid references public.divoom_products(id) on delete restrict,
+  order_id uuid not null references public.asri_orders(id) on delete restrict,
+  product_id uuid references public.asri_products(id) on delete restrict,
   product_name text not null,
   product_sku text,
   selected_options jsonb not null default '{}'::jsonb check (jsonb_typeof(selected_options) = 'object'),
@@ -195,9 +195,9 @@ create table if not exists public.divoom_order_items (
   created_at timestamptz not null default now()
 );
 
-create table if not exists public.divoom_payment_transactions (
+create table if not exists public.asri_payment_transactions (
   id uuid primary key default gen_random_uuid(),
-  order_id uuid not null references public.divoom_orders(id) on delete restrict,
+  order_id uuid not null references public.asri_orders(id) on delete restrict,
   provider text not null default 'midtrans' check (provider = 'midtrans'),
   provider_order_id text not null unique,
   provider_transaction_id text unique,
@@ -214,7 +214,7 @@ create table if not exists public.divoom_payment_transactions (
   updated_at timestamptz not null default now()
 );
 
-create table if not exists public.divoom_payment_callback_events (
+create table if not exists public.asri_payment_callback_events (
   id uuid primary key default gen_random_uuid(),
   provider text not null default 'midtrans' check (provider = 'midtrans'),
   provider_event_key text not null unique check (provider_event_key ~ '^[a-f0-9]{64}$'),
@@ -229,25 +229,25 @@ create table if not exists public.divoom_payment_callback_events (
   processed_at timestamptz
 );
 
-create table if not exists public.divoom_api_rate_limits (
+create table if not exists public.asri_api_rate_limits (
   key_hash text primary key check (length(key_hash) = 64),
   window_started_at timestamptz not null default now(),
   request_count integer not null default 0 check (request_count >= 0)
 );
 
-create unique index if not exists products_slug_uidx on public.divoom_products (slug);
-create unique index if not exists products_sku_uidx on public.divoom_products (sku);
-create unique index if not exists orders_order_number_uidx on public.divoom_orders (order_number);
-create unique index if not exists orders_lookup_token_hash_uidx on public.divoom_orders (lookup_token_hash);
-create unique index if not exists payment_transactions_provider_order_uidx on public.divoom_payment_transactions (provider_order_id);
-create unique index if not exists payment_transactions_provider_tx_uidx on public.divoom_payment_transactions (provider_transaction_id);
-create unique index if not exists payment_transactions_one_per_order_uidx on public.divoom_payment_transactions (order_id);
-create unique index if not exists payment_callback_events_event_key_uidx on public.divoom_payment_callback_events (provider_event_key);
-create index if not exists products_active_published_idx on public.divoom_products (published_at desc) where is_active = true;
-create index if not exists orders_created_at_idx on public.divoom_orders (created_at desc);
-create index if not exists orders_payment_status_idx on public.divoom_orders (payment_status);
-create index if not exists order_items_order_id_idx on public.divoom_order_items (order_id);
-create index if not exists payment_callback_events_received_at_idx on public.divoom_payment_callback_events (received_at desc);
+create unique index if not exists products_slug_uidx on public.asri_products (slug);
+create unique index if not exists products_sku_uidx on public.asri_products (sku);
+create unique index if not exists orders_order_number_uidx on public.asri_orders (order_number);
+create unique index if not exists orders_lookup_token_hash_uidx on public.asri_orders (lookup_token_hash);
+create unique index if not exists payment_transactions_provider_order_uidx on public.asri_payment_transactions (provider_order_id);
+create unique index if not exists payment_transactions_provider_tx_uidx on public.asri_payment_transactions (provider_transaction_id);
+create unique index if not exists payment_transactions_one_per_order_uidx on public.asri_payment_transactions (order_id);
+create unique index if not exists payment_callback_events_event_key_uidx on public.asri_payment_callback_events (provider_event_key);
+create index if not exists products_active_published_idx on public.asri_products (published_at desc) where is_active = true;
+create index if not exists orders_created_at_idx on public.asri_orders (created_at desc);
+create index if not exists orders_payment_status_idx on public.asri_orders (payment_status);
+create index if not exists order_items_order_id_idx on public.asri_order_items (order_id);
+create index if not exists payment_callback_events_received_at_idx on public.asri_payment_callback_events (received_at desc);
 
 create or replace function public.set_updated_at()
 returns trigger
@@ -260,16 +260,16 @@ begin
 end;
 $function$;
 
-drop trigger if exists products_set_updated_at on public.divoom_products;
-create trigger products_set_updated_at before update on public.divoom_products
+drop trigger if exists products_set_updated_at on public.asri_products;
+create trigger products_set_updated_at before update on public.asri_products
 for each row execute function public.set_updated_at();
 
-drop trigger if exists orders_set_updated_at on public.divoom_orders;
-create trigger orders_set_updated_at before update on public.divoom_orders
+drop trigger if exists orders_set_updated_at on public.asri_orders;
+create trigger orders_set_updated_at before update on public.asri_orders
 for each row execute function public.set_updated_at();
 
-drop trigger if exists payment_transactions_set_updated_at on public.divoom_payment_transactions;
-create trigger payment_transactions_set_updated_at before update on public.divoom_payment_transactions
+drop trigger if exists payment_transactions_set_updated_at on public.asri_payment_transactions;
+create trigger payment_transactions_set_updated_at before update on public.asri_payment_transactions
 for each row execute function public.set_updated_at();
 
 create or replace function public.consume_api_rate_limit(p_key text, p_limit integer, p_window_seconds integer)
@@ -286,7 +286,7 @@ begin
     raise exception 'Invalid rate limit arguments';
   end if;
 
-  insert into public.divoom_api_rate_limits as current_rate_limit (key_hash, window_started_at, request_count)
+  insert into public.asri_api_rate_limits as current_rate_limit (key_hash, window_started_at, request_count)
   values (p_key, now(), 1)
   on conflict (key_hash) do update
     set request_count = case
@@ -316,7 +316,7 @@ set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_item jsonb;
-  v_product public.divoom_products%rowtype;
+  v_product public.asri_products%rowtype;
   v_product_id uuid;
   v_quantity integer;
   v_options jsonb;
@@ -360,7 +360,7 @@ begin
       raise exception 'Invalid product quantity or options';
     end if;
 
-    select * into v_product from public.divoom_products where id = v_product_id for update;
+    select * into v_product from public.asri_products where id = v_product_id for update;
     if not found or not v_product.is_active or v_product.published_at is null or v_product.published_at > now() then
       raise exception 'Product unavailable';
     end if;
@@ -383,7 +383,7 @@ begin
       end loop;
     end if;
 
-    update public.divoom_products set stock_quantity = stock_quantity - v_quantity where id = v_product.id;
+    update public.asri_products set stock_quantity = stock_quantity - v_quantity where id = v_product.id;
     v_line_total := v_product.price_idr * v_quantity;
     v_subtotal := v_subtotal + v_line_total;
     v_lines := v_lines || jsonb_build_array(jsonb_build_object(
@@ -398,7 +398,7 @@ begin
 
   v_order_number := 'ASRI-' || to_char(now(), 'YYMMDD') || '-' ||
     upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8));
-  insert into public.divoom_orders (
+  insert into public.asri_orders (
     order_number, lookup_token_hash, customer_name, customer_email, customer_phone,
     shipping_address, subtotal_idr, shipping_cost_idr, total_idr, expires_at
   ) values (
@@ -409,7 +409,7 @@ begin
 
   for v_item in select value from jsonb_array_elements(v_lines)
   loop
-    insert into public.divoom_order_items (
+    insert into public.asri_order_items (
       order_id, product_id, product_name, product_sku, selected_options, unit_price_idr, quantity
     ) values (
       v_order_id, (v_item->>'product_id')::uuid, v_item->>'product_name', v_item->>'product_sku',
@@ -433,30 +433,30 @@ security definer
 set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
-  v_order public.divoom_orders%rowtype;
+  v_order public.asri_orders%rowtype;
   v_item record;
   v_count integer := 0;
 begin
   for v_order in
-    select * from public.divoom_orders
+    select * from public.asri_orders
     where payment_status = 'pending'
       and expires_at is not null
       and expires_at <= now()
       and stock_released = false
     for update skip locked
   loop
-    for v_item in select product_id, quantity from public.divoom_order_items
+    for v_item in select product_id, quantity from public.asri_order_items
       where order_id = v_order.id and product_id is not null
     loop
-      update public.divoom_products set stock_quantity = stock_quantity + v_item.quantity
+      update public.asri_products set stock_quantity = stock_quantity + v_item.quantity
       where id = v_item.product_id;
     end loop;
-    update public.divoom_orders set
+    update public.asri_orders set
       payment_status = 'expired',
       order_status = 'cancelled',
       stock_released = true
     where id = v_order.id;
-    update public.divoom_payment_transactions set
+    update public.asri_payment_transactions set
       internal_status = 'expired',
       transaction_status = coalesce(transaction_status, 'expire')
     where order_id = v_order.id and internal_status = 'pending';
@@ -481,8 +481,8 @@ security definer
 set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
-  v_payment public.divoom_payment_transactions%rowtype;
-  v_order public.divoom_orders%rowtype;
+  v_payment public.asri_payment_transactions%rowtype;
+  v_order public.asri_orders%rowtype;
   v_next text;
   v_event_rows integer;
   v_released boolean := false;
@@ -495,14 +495,14 @@ begin
     raise exception 'Invalid notification arguments';
   end if;
 
-  select * into v_payment from public.divoom_payment_transactions
+  select * into v_payment from public.asri_payment_transactions
   where provider_order_id = p_provider_order_id for update;
   if not found then
     return jsonb_build_object('status', 'transaction_not_found');
   end if;
-  select * into v_order from public.divoom_orders where id = v_payment.order_id for update;
+  select * into v_order from public.asri_orders where id = v_payment.order_id for update;
 
-  insert into public.divoom_payment_callback_events (
+  insert into public.asri_payment_callback_events (
     provider_event_key, provider_order_id, provider_transaction_id,
     signature_valid, processing_status, payload
   ) values (
@@ -536,16 +536,16 @@ begin
   else
     if v_next in ('failed','expired','cancelled') and not v_order.stock_released then
       for v_item in
-        select product_id, quantity from public.divoom_order_items
+        select product_id, quantity from public.asri_order_items
         where order_id = v_order.id and product_id is not null
       loop
-        update public.divoom_products set stock_quantity = stock_quantity + v_item.quantity
+        update public.asri_products set stock_quantity = stock_quantity + v_item.quantity
         where id = v_item.product_id;
       end loop;
       v_released := true;
     end if;
 
-    update public.divoom_payment_transactions set
+    update public.asri_payment_transactions set
       provider_transaction_id = p_provider_transaction_id,
       transaction_status = p_transaction_status,
       fraud_status = p_fraud_status,
@@ -553,7 +553,7 @@ begin
       internal_status = v_next
     where id = v_payment.id;
 
-    update public.divoom_orders set
+    update public.asri_orders set
       payment_status = v_next,
       stock_released = stock_released or v_released,
       order_status = case
@@ -566,7 +566,7 @@ begin
     where id = v_order.id;
   end if;
 
-  update public.divoom_payment_callback_events set
+  update public.asri_payment_callback_events set
     processing_status = case when v_result = 'processed' then 'processed' else 'ignored' end,
     processed_at = now()
   where provider_event_key = p_event_key;
@@ -578,24 +578,24 @@ begin
 end;
 $function$;
 
-alter table public.divoom_products enable row level security;
-alter table public.divoom_orders enable row level security;
-alter table public.divoom_order_items enable row level security;
-alter table public.divoom_payment_transactions enable row level security;
-alter table public.divoom_payment_callback_events enable row level security;
-alter table public.divoom_api_rate_limits enable row level security;
+alter table public.asri_products enable row level security;
+alter table public.asri_orders enable row level security;
+alter table public.asri_order_items enable row level security;
+alter table public.asri_payment_transactions enable row level security;
+alter table public.asri_payment_callback_events enable row level security;
+alter table public.asri_api_rate_limits enable row level security;
 
-drop policy if exists "Public can read active divoom_products" on public.divoom_products;
-create policy "Public can read active divoom_products"
-  on public.divoom_products for select to anon, authenticated
+drop policy if exists "Public can read active asri_products" on public.asri_products;
+create policy "Public can read active asri_products"
+  on public.asri_products for select to anon, authenticated
   using (is_active = true and published_at is not null and published_at <= now());
 
-revoke all on public.divoom_products, public.divoom_orders, public.divoom_order_items,
-  public.divoom_payment_transactions, public.divoom_payment_callback_events, public.divoom_api_rate_limits
+revoke all on public.asri_products, public.asri_orders, public.asri_order_items,
+  public.asri_payment_transactions, public.asri_payment_callback_events, public.asri_api_rate_limits
   from anon, authenticated;
-grant select on public.divoom_products to anon, authenticated;
-grant all on public.divoom_products, public.divoom_orders, public.divoom_order_items,
-  public.divoom_payment_transactions, public.divoom_payment_callback_events, public.divoom_api_rate_limits to service_role;
+grant select on public.asri_products to anon, authenticated;
+grant all on public.asri_products, public.asri_orders, public.asri_order_items,
+  public.asri_payment_transactions, public.asri_payment_callback_events, public.asri_api_rate_limits to service_role;
 
 revoke all on function public.consume_api_rate_limit(text, integer, integer) from public, anon, authenticated;
 revoke all on function public.create_order_atomic(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
