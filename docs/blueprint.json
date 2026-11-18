@@ -53,9 +53,9 @@
               {"type": "ProductDetailPage", "route": "/products/:slug"},
               {"type": "ShoppingCartPage", "route": "/cart"},
               {"type": "CheckoutPage", "route": "/checkout"},
-              {"type": "MidtransPaymentPage", "route": "/payment/:orderId"},
-              {"type": "PaymentResultPage", "route": "/payment/result/:orderId"},
-              {"type": "OrderTrackingPage", "route": "/order/:orderNumber"}
+              {"type": "MidtransPaymentPage", "route": "/payment/:orderNumber"},
+              {"type": "PaymentResultPage", "route": "/payment/result", "query": "order=:orderNumber"},
+              {"type": "OrderTrackingPage", "route": "/order"}
             ]
           },
           {"type": "Footer"}
