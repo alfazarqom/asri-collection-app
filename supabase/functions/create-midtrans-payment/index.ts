@@ -54,6 +54,11 @@ Deno.serve(async (req: Request) => {
     if (itemSubtotal + 52000 !== order.total_idr) return json(409, { error: "Ringkasan pesanan tidak konsisten." });
     items.push({ id: "shipping", price: 52000, quantity: 1, name: "Biaya pengiriman" });
 
+    const publicUrl = Deno.env.get("APP_PUBLIC_URL") ||
+      (Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true" ? "" : "http://localhost:5173");
+    if (!publicUrl || (Deno.env.get("MIDTRANS_IS_PRODUCTION") === "true" && !publicUrl.startsWith("https://"))) {
+      throw new Error("APP_PUBLIC_URL must be configured as HTTPS in production");
+    }
     const payload = {
       transaction_details: { order_id: order.order_number, gross_amount: order.total_idr },
       item_details: items,
@@ -63,8 +68,7 @@ Deno.serve(async (req: Request) => {
         phone: order.customer_phone
       },
       callbacks: {
-        finish: (Deno.env.get("APP_PUBLIC_URL") || "http://localhost:5173") +
-          "/payment/result?order=" + encodeURIComponent(order.order_number)
+        finish: publicUrl + "/payment/result?order=" + encodeURIComponent(order.order_number)
       }
     };
     const auth = btoa(serverKey() + ":");
