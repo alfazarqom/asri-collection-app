@@ -1,0 +1,26 @@
+{
+  "name": "asri-storefront-ui-v2-tailwind4-poc",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build"
+  },
+  "dependencies": {
+    "@storefront-ui/react": "3.0.0",
+    "@storefront-ui/typography": "3.1.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.13",
+    "@types/react": "18.3.24",
+    "@types/react-dom": "18.3.7",
+    "@vitejs/plugin-react": "4.7.0",
+    "tailwindcss": "4.1.13",
+    "typescript": "5.8.3",
+    "vite": "6.3.5"
+  }
+}
