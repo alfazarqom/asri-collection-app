@@ -243,7 +243,7 @@ create or replace function public.consume_api_rate_limit(p_key text, p_limit int
 returns boolean
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_count integer;
@@ -276,7 +276,7 @@ create or replace function public.create_order_atomic(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_item jsonb;
@@ -383,7 +383,7 @@ create or replace function public.release_expired_order_reservations()
 returns integer
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_order public.orders%rowtype;
@@ -429,7 +429,7 @@ create or replace function public.apply_midtrans_notification(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_payment public.payment_transactions%rowtype;
@@ -622,7 +622,7 @@ create or replace function public.release_expired_order_reservations()
 returns integer
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_order public.orders%rowtype;
@@ -668,7 +668,7 @@ create or replace function public.apply_midtrans_notification(
 returns jsonb
 language plpgsql
 security definer
-set search_path = public, pg_temp
+set search_path = pg_catalog, public, pg_temp
 as $function$
 declare
   v_payment public.payment_transactions%rowtype;
