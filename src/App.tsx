@@ -5,11 +5,10 @@ import { ArrowLeft, ArrowRight, Check, LoaderCircle, Minus, Plus, ShoppingBag, T
 import { createOrder, createPayment, getOrderStatus, getProducts } from "./lib/api";
 import { backendConfigMessage, hasBackendConfig } from "./lib/supabase";
 import type { CustomerInput, OrderStatus, Product } from "./types";
+import { formatIDR as money, SHIPPING_IDR as SHIPPING } from "./lib/money";
 
-const SHIPPING = 52000;
 const CART_KEY = "asri-cart-v1";
 const LOOKUP_KEY = "asri-order-lookup-v1";
-const money = (n: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(n);
 const readCart = (): CartLine[] => { try { return JSON.parse(localStorage.getItem(CART_KEY) || "[]") as CartLine[]; } catch { return []; } };
 const saveCart = (cart: CartLine[]) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
 
