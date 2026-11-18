@@ -41,7 +41,7 @@ Deno.serve(async (req: Request) => {
             await verifyMidtransSignature(orderId, statusCode, grossAmount, signature) &&
             toMinorAmount(grossAmount) === order.total_idr) {
           const eventKey = await sha256(orderId + ":" + transactionId + ":" + transactionStatus + ":" + statusCode);
-          const { error: applyError } = await db.rpc("apply_midtrans_notification", {
+          const { error: applyError } = await db.rpc("asri_apply_midtrans_notification", {
             p_event_key: eventKey,
             p_provider_order_id: orderId,
             p_provider_transaction_id: transactionId,
@@ -60,7 +60,7 @@ Deno.serve(async (req: Request) => {
       }
     }
 
-    const { error: expiryError } = await db.rpc("release_expired_order_reservations");
+    const { error: expiryError } = await db.rpc("asri_release_expired_order_reservations");
     if (expiryError) throw expiryError;
 
     const { data: latest, error: latestError } = await db.from("asri_orders")
