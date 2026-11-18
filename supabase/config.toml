@@ -20,17 +20,17 @@ port = 54323
 
 # Public catalog, guest checkout and provider webhook functions use application-level
 # validation and service-role-only database RPCs. Do not interpret this as public DB access.
-[functions.get-asri-products]
+[functions.asri-get-products]
 verify_jwt = false
 
-[functions.create-order]
+[functions.asri-create-order]
 verify_jwt = false
 
-[functions.create-midtrans-payment]
+[functions.asri-create-midtrans-payment]
 verify_jwt = false
 
-[functions.midtrans-notification]
+[functions.asri-midtrans-notification]
 verify_jwt = false
 
-[functions.get-order-status]
+[functions.asri-get-order-status]
 verify_jwt = false
