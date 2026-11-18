@@ -235,21 +235,21 @@ create table if not exists public.asri_api_rate_limits (
   request_count integer not null default 0 check (request_count >= 0)
 );
 
-create unique index if not exists products_slug_uidx on public.asri_products (slug);
-create unique index if not exists products_sku_uidx on public.asri_products (sku);
-create unique index if not exists orders_order_number_uidx on public.asri_orders (order_number);
-create unique index if not exists orders_lookup_token_hash_uidx on public.asri_orders (lookup_token_hash);
-create unique index if not exists payment_transactions_provider_order_uidx on public.asri_payment_transactions (provider_order_id);
-create unique index if not exists payment_transactions_provider_tx_uidx on public.asri_payment_transactions (provider_transaction_id);
-create unique index if not exists payment_transactions_one_per_order_uidx on public.asri_payment_transactions (order_id);
-create unique index if not exists payment_callback_events_event_key_uidx on public.asri_payment_callback_events (provider_event_key);
-create index if not exists products_active_published_idx on public.asri_products (published_at desc) where is_active = true;
-create index if not exists orders_created_at_idx on public.asri_orders (created_at desc);
-create index if not exists orders_payment_status_idx on public.asri_orders (payment_status);
-create index if not exists order_items_order_id_idx on public.asri_order_items (order_id);
-create index if not exists payment_callback_events_received_at_idx on public.asri_payment_callback_events (received_at desc);
+create unique index if not exists asri_products_slug_uidx on public.asri_products (slug);
+create unique index if not exists asri_products_sku_uidx on public.asri_products (sku);
+create unique index if not exists asri_orders_order_number_uidx on public.asri_orders (order_number);
+create unique index if not exists asri_orders_lookup_token_hash_uidx on public.asri_orders (lookup_token_hash);
+create unique index if not exists asri_payment_transactions_provider_order_uidx on public.asri_payment_transactions (provider_order_id);
+create unique index if not exists asri_payment_transactions_provider_tx_uidx on public.asri_payment_transactions (provider_transaction_id);
+create unique index if not exists asri_payment_transactions_one_per_order_uidx on public.asri_payment_transactions (order_id);
+create unique index if not exists asri_payment_callback_events_event_key_uidx on public.asri_payment_callback_events (provider_event_key);
+create index if not exists asri_products_active_published_idx on public.asri_products (published_at desc) where is_active = true;
+create index if not exists asri_orders_created_at_idx on public.asri_orders (created_at desc);
+create index if not exists asri_orders_payment_status_idx on public.asri_orders (payment_status);
+create index if not exists asri_order_items_order_id_idx on public.asri_order_items (order_id);
+create index if not exists asri_payment_callback_events_received_at_idx on public.asri_payment_callback_events (received_at desc);
 
-create or replace function public.set_updated_at()
+create or replace function public.asri_set_updated_at()
 returns trigger
 language plpgsql
 set search_path = pg_catalog
@@ -260,19 +260,19 @@ begin
 end;
 $function$;
 
-drop trigger if exists products_set_updated_at on public.asri_products;
-create trigger products_set_updated_at before update on public.asri_products
-for each row execute function public.set_updated_at();
+drop trigger if exists products_asri_set_updated_at on public.asri_products;
+create trigger products_asri_set_updated_at before update on public.asri_products
+for each row execute function public.asri_set_updated_at();
 
-drop trigger if exists orders_set_updated_at on public.asri_orders;
-create trigger orders_set_updated_at before update on public.asri_orders
-for each row execute function public.set_updated_at();
+drop trigger if exists orders_asri_set_updated_at on public.asri_orders;
+create trigger orders_asri_set_updated_at before update on public.asri_orders
+for each row execute function public.asri_set_updated_at();
 
-drop trigger if exists payment_transactions_set_updated_at on public.asri_payment_transactions;
-create trigger payment_transactions_set_updated_at before update on public.asri_payment_transactions
-for each row execute function public.set_updated_at();
+drop trigger if exists payment_transactions_asri_set_updated_at on public.asri_payment_transactions;
+create trigger payment_transactions_asri_set_updated_at before update on public.asri_payment_transactions
+for each row execute function public.asri_set_updated_at();
 
-create or replace function public.consume_api_rate_limit(p_key text, p_limit integer, p_window_seconds integer)
+create or replace function public.asri_consume_api_rate_limit(p_key text, p_limit integer, p_window_seconds integer)
 returns boolean
 language plpgsql
 security definer
@@ -303,7 +303,7 @@ begin
 end;
 $function$;
 
-create or replace function public.create_order_atomic(
+create or replace function public.asri_create_order_atomic(
   p_customer jsonb,
   p_shipping_address jsonb,
   p_items jsonb,
@@ -426,7 +426,7 @@ begin
 end;
 $function$;
 
-create or replace function public.release_expired_order_reservations()
+create or replace function public.asri_release_expired_order_reservations()
 returns integer
 language plpgsql
 security definer
@@ -466,7 +466,7 @@ begin
 end;
 $function$;
 
-create or replace function public.apply_midtrans_notification(
+create or replace function public.asri_apply_midtrans_notification(
   p_event_key text,
   p_provider_order_id text,
   p_provider_transaction_id text,
@@ -585,8 +585,8 @@ alter table public.asri_payment_transactions enable row level security;
 alter table public.asri_payment_callback_events enable row level security;
 alter table public.asri_api_rate_limits enable row level security;
 
-drop policy if exists "Public can read active asri_products" on public.asri_products;
-create policy "Public can read active asri_products"
+drop policy if exists "asri_public_read_active_products" on public.asri_products;
+create policy "asri_public_read_active_products"
   on public.asri_products for select to anon, authenticated
   using (is_active = true and published_at is not null and published_at <= now());
 
@@ -597,13 +597,13 @@ grant select on public.asri_products to anon, authenticated;
 grant all on public.asri_products, public.asri_orders, public.asri_order_items,
   public.asri_payment_transactions, public.asri_payment_callback_events, public.asri_api_rate_limits to service_role;
 
-revoke all on function public.consume_api_rate_limit(text, integer, integer) from public, anon, authenticated;
-revoke all on function public.create_order_atomic(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
-revoke all on function public.release_expired_order_reservations() from public, anon, authenticated;
-revoke all on function public.apply_midtrans_notification(text, text, text, text, text, text, jsonb) from public, anon, authenticated;
-grant execute on function public.consume_api_rate_limit(text, integer, integer) to service_role;
-grant execute on function public.create_order_atomic(jsonb, jsonb, jsonb, text) to service_role;
-grant execute on function public.release_expired_order_reservations() to service_role;
-grant execute on function public.apply_midtrans_notification(text, text, text, text, text, text, jsonb) to service_role;
+revoke all on function public.asri_consume_api_rate_limit(text, integer, integer) from public, anon, authenticated;
+revoke all on function public.asri_create_order_atomic(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
+revoke all on function public.asri_release_expired_order_reservations() from public, anon, authenticated;
+revoke all on function public.asri_apply_midtrans_notification(text, text, text, text, text, text, jsonb) from public, anon, authenticated;
+grant execute on function public.asri_consume_api_rate_limit(text, integer, integer) to service_role;
+grant execute on function public.asri_create_order_atomic(jsonb, jsonb, jsonb, text) to service_role;
+grant execute on function public.asri_release_expired_order_reservations() to service_role;
+grant execute on function public.asri_apply_midtrans_notification(text, text, text, text, text, text, jsonb) to service_role;
 
 commit;
