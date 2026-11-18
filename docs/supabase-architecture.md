@@ -16,11 +16,11 @@ The following are conceptual responsibilities, not a claim that these exact colu
 
 | Table | Responsibility |
 |---|---|
-| `divoom_products` | Product catalog and product availability. |
-| `divoom_orders` | Order number, customer contact/address, totals and order/payment lifecycle. |
-| `divoom_order_items` | Immutable product name, selected option, quantity and unit-price snapshots. |
-| `divoom_payment_transactions` | Midtrans transaction reference, amount, payment type and normalized status. |
-| `divoom_payment_callback_events` | Notification event audit, verification outcome, processing state and idempotency reference. |
+| `asri_products` | Product catalog and product availability. |
+| `asri_orders` | Order number, customer contact/address, totals and order/payment lifecycle. |
+| `asri_order_items` | Immutable product name, selected option, quantity and unit-price snapshots. |
+| `asri_payment_transactions` | Midtrans transaction reference, amount, payment type and normalized status. |
+| `asri_payment_callback_events` | Notification event audit, verification outcome, processing state and idempotency reference. |
 
 Use existing category/variant structures if they are present and verified. Do not create parallel tables such as a second payments table or a speculative inventory-reservations subsystem without an audit and explicit requirement.
 
@@ -38,13 +38,13 @@ Use existing category/variant structures if they are present and verified. Do no
 
 | Function | Responsibility |
 |---|---|
-| `get-asri-divoom_products` | Return the verified public product catalog contract. |
+| `get-asri-products` | Return the verified public product catalog contract. |
 | `create-order` | Validate customer input, product IDs/options, current prices and stock; calculate shipping and total; persist order and item snapshots. |
 | `create-midtrans-payment` | Create a Midtrans Snap transaction for an existing valid order and persist provider references. |
 | `midtrans-notification` | Verify Midtrans notification server-side, bind it to the order and amount, record the event idempotently and update payment/order state. |
 | `get-order-status` | Return only the permitted order/status information for a valid lookup credential or protected order reference. |
 
-These are target responsibilities. Before implementation, compare them with deployed function names and contracts to avoid duplicate endpoints. Existing `get-asri-divoom_products` should be inspected rather than replaced on assumption.
+These are target responsibilities. Before implementation, compare them with deployed function names and contracts to avoid duplicate endpoints. Existing `get-asri-products` should be inspected rather than replaced on assumption.
 
 ## 4. Payment lifecycle
 
@@ -118,7 +118,7 @@ Never expose service-role or Midtrans server credentials through `VITE_*`, sourc
 ## 9. Required security tests
 
 - Tampered client total is ignored.
-- Unknown, inactive or unavailable divoom_products are rejected.
+- Unknown, inactive or unavailable asri_products are rejected.
 - Invalid order/amount/provider transaction binding is rejected.
 - Invalid Midtrans notification verification does not change payment/order state.
 - Duplicate notification has no duplicate side effect.
