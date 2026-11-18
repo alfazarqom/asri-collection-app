@@ -8,3 +8,8 @@
 .result-icon.danger{background:#f8e9e6;color:#984b40}
 .result-icon.neutral{background:#e9ece8;color:#66746a}
 .status-description{max-width:560px;margin:18px auto 0}
+
+.tracking-result{margin-top:36px;padding-top:30px;border-top:1px solid #e1e5df}
+.tracking-result h2{font-family:Georgia,serif;font-size:clamp(24px,3vw,32px);font-weight:400;letter-spacing:-.02em;margin:0 0 8px}
+.tracking-result>.muted{text-align:center}
+.tracking-result .result-icon{margin:22px auto}
