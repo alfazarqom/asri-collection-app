@@ -319,7 +319,7 @@ declare
   v_payment public.payment_transactions%rowtype;
   v_order public.orders%rowtype;
   v_next text;
-  v_event_inserted boolean;
+  v_event_rows integer;
   v_released boolean := false;
   v_item record;
   v_result text := 'processed';
@@ -342,8 +342,8 @@ begin
     p_event_key, p_provider_order_id, p_provider_transaction_id,
     true, 'received', coalesce(p_payload, '{}'::jsonb)
   ) on conflict (provider_event_key) do nothing;
-  get diagnostics v_event_inserted = row_count;
-  if not v_event_inserted then
+  get diagnostics v_event_rows = row_count;
+  if v_event_rows = 0 then
     return jsonb_build_object('status', 'duplicate');
   end if;
 
@@ -419,6 +419,8 @@ revoke all on public.products, public.orders, public.order_items,
   public.payment_transactions, public.payment_callback_events, public.api_rate_limits
   from anon, authenticated;
 grant select on public.products to anon, authenticated;
+grant all on public.products, public.orders, public.order_items,
+  public.payment_transactions, public.payment_callback_events, public.api_rate_limits to service_role;
 
 revoke all on function public.consume_api_rate_limit(text, integer, integer) from public, anon, authenticated;
 revoke all on function public.create_order_atomic(jsonb, jsonb, jsonb, text) from public, anon, authenticated;
