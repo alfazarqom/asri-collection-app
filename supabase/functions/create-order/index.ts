@@ -7,7 +7,7 @@ Deno.serve(async (req: Request) => {
   try {
     const db = getAdmin();
     if (!(await rateLimit(db, req, "create-order", 8, 60))) return json(429, { error: "Terlalu banyak percobaan checkout." });
-    const { error: expiryError } = await db.rpc("release_expired_order_reservations");
+    const { error: expiryError } = await db.rpc("asri_release_expired_order_reservations");
     if (expiryError) throw expiryError;
     const body = await readJson(req);
     const customer = body.customer as Record<string, unknown>;
@@ -35,7 +35,7 @@ Deno.serve(async (req: Request) => {
     if (new Set(cleanItems.map(x => x.product_id)).size !== cleanItems.length) return json(400, { error: "Produk duplikat tidak diperbolehkan dalam satu checkout." });
     const lookupToken = randomToken();
     const lookupHash = await sha256(lookupToken);
-    const { data, error } = await db.rpc("create_order_atomic", {
+    const { data, error } = await db.rpc("asri_create_order_atomic", {
       p_customer: { name, email, phone },
       p_shipping_address: { address, city, province, postal_code: postalCode, country_code: "ID" },
       p_items: cleanItems,
