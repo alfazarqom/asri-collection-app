@@ -15,7 +15,20 @@ Deno.serve(async (req: Request) => {
       .order("published_at", { ascending: false })
       .limit(100);
     if (error) throw error;
-    return json(200, { products: data ?? [] });
+    const products = (data ?? []).filter((product: Record<string, unknown>) => {
+      const options = product.options;
+      return Array.isArray(options) && options.every((option: unknown) =>
+        Boolean(option) && typeof option === "object" && !Array.isArray(option) &&
+        typeof (option as Record<string, unknown>).name === "string" &&
+        Array.isArray((option as Record<string, unknown>).values) &&
+        ((option as Record<string, unknown>).values as unknown[]).every(value => typeof value === "string")
+      );
+    }).map((product: Record<string, unknown>) => ({
+      ...product,
+      images: Array.isArray(product.images) ? product.images.filter((image: unknown) => typeof image === "string" && /^https?:\/\//i.test(image)) : [],
+      options: Array.isArray(product.options) ? product.options : []
+    }));
+    return json(200, { products });
   } catch (error) {
     console.error("catalog_error", error instanceof Error ? error.message : "unknown");
     return json(503, { error: "Katalog sedang tidak tersedia." });
