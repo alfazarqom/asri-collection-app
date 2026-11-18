@@ -7,7 +7,7 @@ Deno.serve(async (req: Request) => {
   try {
     const db = getAdmin();
     if (!(await rateLimit(db, req, "catalog", 60, 60))) return json(429, { error: "Terlalu banyak permintaan. Coba lagi sebentar." });
-    const { data, error } = await db.from("products")
+    const { data, error } = await db.from("divoom_products")
       .select("id,slug,sku,name,description,price_idr,compare_at_price_idr,images,options,stock_quantity")
       .eq("is_active", true)
       .not("published_at", "is", null)
@@ -15,7 +15,7 @@ Deno.serve(async (req: Request) => {
       .order("published_at", { ascending: false })
       .limit(100);
     if (error) throw error;
-    const products = (data ?? []).filter((product: Record<string, unknown>) => {
+    const divoom_products = (data ?? []).filter((product: Record<string, unknown>) => {
       const options = product.options;
       return Array.isArray(options) && options.every((option: unknown) =>
         Boolean(option) && typeof option === "object" && !Array.isArray(option) &&
@@ -28,7 +28,7 @@ Deno.serve(async (req: Request) => {
       images: Array.isArray(product.images) ? product.images.filter((image: unknown) => typeof image === "string" && /^https?:\/\//i.test(image)) : [],
       options: Array.isArray(product.options) ? product.options : []
     }));
-    return json(200, { products });
+    return json(200, { divoom_products });
   } catch (error) {
     console.error("catalog_error", error instanceof Error ? error.message : "unknown");
     return json(503, { error: "Katalog sedang tidak tersedia." });
