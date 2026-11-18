@@ -8,10 +8,12 @@ export interface AsriDrawerProps extends Omit<StorefrontDrawerProps, "placement"
   position?: AsriDrawerPosition;
 }
 
-export function AsriDrawer({ children, position = "right", className = "", ...props }: AsriDrawerProps) {
+export function AsriDrawer({ children, position = "right", open, onClose, className = "", ...props }: AsriDrawerProps) {
   return (
     <SfDrawer
       {...props}
+      open={open}
+      onClose={onClose}
       placement={position}
       className={`asri-drawer ${className}`.trim()}
     >
