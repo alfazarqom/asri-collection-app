@@ -32,9 +32,11 @@ function App() {
   const count = cart.reduce((sum, line) => sum + line.quantity, 0);
   const subtotal = cart.reduce((sum, line) => sum + line.product.price_idr * line.quantity, 0);
   const updateCart = (next: CartLine[]) => { setCart(next); saveCart(next); };
-  const add = (product: Product) => {
+  const add = (product: Product, selectedOptions: Record<string, string> = {}) => {
     const existing = cart.find(line => line.product.id === product.id);
-    updateCart(existing ? cart.map(line => line.product.id === product.id ? { ...line, quantity: Math.min(line.quantity + 1, product.stock_quantity) } : line) : [...cart, { product, quantity: 1 }]);
+    updateCart(existing
+      ? cart.map(line => line.product.id === product.id ? { ...line, selected_options: selectedOptions, quantity: Math.min(line.quantity + 1, product.stock_quantity) } : line)
+      : [...cart, { product, quantity: 1, selected_options: selectedOptions }]);
   };
   const setQuantity = (id: string, quantity: number) => updateCart(quantity < 1 ? cart.filter(line => line.product.id !== id) : cart.map(line => line.product.id === id ? { ...line, quantity: Math.min(quantity, line.product.stock_quantity) } : line));
   useEffect(() => { let active = true; setLoading(true); getProducts().then(data => { if (active) { setProducts(data); setCatalogError(""); } }).catch(e => { if (active) setCatalogError(e.message); }).finally(() => { if (active) setLoading(false); }); return () => { active = false; }; }, [reload]);
@@ -46,6 +48,7 @@ function App() {
   function Detail() {
     const { slug } = useParams();
     const product = products.find(p => p.slug === slug);
+    const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
     if (loading) return <div className="loading"><LoaderCircle className="spin"/> Memuat produk...</div>;
     if (catalogError) return <section className="section"><Notice>{catalogError}</Notice></section>;
     if (!product) return <section className="section"><Notice tone="info">Produk tidak ditemukan atau tidak tersedia.</Notice><Link to="/products" className="back-link"><ArrowLeft size={16}/> Kembali ke koleksi</Link></section>;
