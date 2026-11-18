@@ -1,0 +1,38 @@
+name: Storefront UI V2 Tailwind 4 POC
+
+on:
+  push:
+    branches:
+      - "poc/storefront-ui-v2-tailwind4"
+    paths:
+      - "poc/storefront-ui-v2-tailwind4/**"
+      - ".github/workflows/storefront-ui-poc.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "poc/storefront-ui-v2-tailwind4/**"
+      - ".github/workflows/storefront-ui-poc.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  compatibility:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: poc/storefront-ui-v2-tailwind4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: poc/storefront-ui-v2-tailwind4/package.json
+      - name: Install isolated POC dependencies
+        run: npm install --no-audit --no-fund
+      - name: Verify React and Storefront UI dependency tree
+        run: npm ls react react-dom @storefront-ui/react tailwindcss
+      - name: Type check and production build
+        run: npm run build
