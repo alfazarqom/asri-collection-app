@@ -7,8 +7,6 @@ Deno.serve(async (req: Request) => {
   try {
     const db = getAdmin();
     if (!(await rateLimit(db, req, "order-status", 12, 60))) return json(429, { error: "Terlalu banyak permintaan." });
-    const { error: expiryError } = await db.rpc("release_expired_order_reservations");
-    if (expiryError) throw expiryError;
     const body = await readJson(req);
     const orderNumber = requiredString(body.order_number, 50);
     const lookupToken = requiredString(body.lookup_token, 128);
@@ -61,6 +59,9 @@ Deno.serve(async (req: Request) => {
         }
       }
     }
+
+    const { error: expiryError } = await db.rpc("release_expired_order_reservations");
+    if (expiryError) throw expiryError;
 
     const { data: latest, error: latestError } = await db.from("orders")
       .select("order_number,order_status,payment_status,subtotal_idr,shipping_cost_idr,total_idr,created_at,expires_at")
