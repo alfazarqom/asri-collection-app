@@ -47,3 +47,13 @@ Record the exact command, short output summary, environment (local/sandbox), and
 ## 5. Not executed by this blueprint commit
 
 No application tests, SQL migrations, Supabase function tests, Midtrans sandbox transactions, or deployment checks are claimed as executed by adding these documentation files.
+
+
+## 6. Implementation verification for A-01 to A-04
+
+GitHub Actions workflow: `.github/workflows/ci.yml`
+
+- Frontend: `npm run typecheck`, `npm test`, `npm run build`.
+- Edge Functions: `deno check` for all five handlers.
+- SQL migration: not run by CI in this PR; requires a PostgreSQL/Supabase local environment and preflight against the target schema.
+- Midtrans sandbox: not run; requires separately configured merchant sandbox credentials and notification URL.
