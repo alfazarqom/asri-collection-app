@@ -51,12 +51,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: supabase/setup-cli@v1
+        id: setup-supabase-cli
         with:
-          version: latest
+          version: 3.2.0
       - name: Start isolated local Supabase
         run: supabase start -x studio,imgproxy,logflare,vector,supavisor
       - name: Apply migrations to clean local database
         run: supabase db reset
       - name: Stop local Supabase
-        if: always()
+        if: always() && steps.setup-supabase-cli.outcome == 'success'
         run: supabase stop --no-backup

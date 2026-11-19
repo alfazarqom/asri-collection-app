@@ -14,3 +14,4 @@ export { AsriDrawer } from "./AsriDrawer";
 export type { AsriDrawerProps, AsriDrawerPosition } from "./AsriDrawer";
 export { AsriModal } from "./AsriModal";
 export type { AsriModalProps } from "./AsriModal";
+export { SfBadge, SfLink } from "@storefront-ui/react";
