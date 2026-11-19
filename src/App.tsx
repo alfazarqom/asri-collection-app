@@ -15,7 +15,7 @@ const readCart = (): CartLine[] => { try { return JSON.parse(localStorage.getIte
 const saveCart = (cart: CartLine[]) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
 
 function Header({ count }: { count: number }) {
-  return <header className="site-header"><div className="header-inner"><Link className="brand" to="/">ASRI<span>COLLECTION</span></Link><nav><Link to="/">Beranda</Link><Link to="/products">Koleksi</Link></nav><Link className="cart-link" to="/cart" aria-label="Keranjang"><ShoppingBag size={19}/><span>Keranjang</span><span className="cart-count"><SfBadge content={count} max={99} /></span></Link></div></header>;
+  return <header className="site-header"><div className="header-inner"><Link className="brand" to="/">ASRI<span>COLLECTION</span></Link><nav><Link to="/">Beranda</Link><Link to="/products">Koleksi</Link></nav><Link className="cart-link" to="/cart" aria-label="Keranjang"><span className="cart-icon-wrap"><ShoppingBag size={19}/><SfBadge content={count} max={99} /></span><span>Keranjang</span></Link></div></header>;
 }
 function Footer() { return <footer className="footer"><div><b>ASRI COLLECTION</b><p>Tampil Elegan, Setiap Hari.</p><Link className="footer-link" to="/order">Lacak pesanan</Link></div><span>© {new Date().getFullYear()} Asri Collection</span></footer>; }
 function Layout({ children, count }: { children: ReactNode; count: number }) { return <><Header count={count}/><main>{children}</main><Footer/></>; }
