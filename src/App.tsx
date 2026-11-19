@@ -7,7 +7,7 @@ import { createOrder, createPayment, getOrderStatus, getProducts } from "./lib/a
 import type { CartLine, CustomerInput, OrderStatus, Product } from "./types";
 import { formatIDR as money, SHIPPING_IDR as SHIPPING } from "./lib/money";
 import { getOrderStatusLabel, getPaymentStatusView } from "./lib/order-status";
-import { AsriButton, AsriInput, AsriSelect, AsriTextarea } from "./components/ui";
+import { AsriButton, AsriInput, AsriSelect, AsriTextarea, SfBadge, SfLink } from "./components/ui";
 
 const CART_KEY = "asri-cart-v1";
 const LOOKUP_KEY = "asri-order-lookup-v1";
@@ -15,14 +15,14 @@ const readCart = (): CartLine[] => { try { return JSON.parse(localStorage.getIte
 const saveCart = (cart: CartLine[]) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
 
 function Header({ count }: { count: number }) {
-  return <header className="site-header"><div className="header-inner"><Link className="brand" to="/">ASRI<span>COLLECTION</span></Link><nav><Link to="/">Beranda</Link><Link to="/products">Koleksi</Link></nav><Link className="cart-link" to="/cart" aria-label="Keranjang"><ShoppingBag size={19}/><span>Keranjang</span><b>{count}</b></Link></div></header>;
+  return <header className="site-header"><div className="header-inner"><Link className="brand" to="/">ASRI<span>COLLECTION</span></Link><nav><Link to="/">Beranda</Link><Link to="/products">Koleksi</Link></nav><Link className="cart-link" to="/cart" aria-label="Keranjang"><ShoppingBag size={19}/><span>Keranjang</span><span className="cart-count"><SfBadge content={count} max={99} /></span></Link></div></header>;
 }
 function Footer() { return <footer className="footer"><div><b>ASRI COLLECTION</b><p>Tampil Elegan, Setiap Hari.</p><Link className="footer-link" to="/order">Lacak pesanan</Link></div><span>© {new Date().getFullYear()} Asri Collection</span></footer>; }
 function Layout({ children, count }: { children: ReactNode; count: number }) { return <><Header count={count}/><main>{children}</main><Footer/></>; }
 function Notice({ children, tone = "error" }: { children: ReactNode; tone?: "error" | "info" }) { return <div className={"notice " + tone} role="status">{children}</div>; }
 function ProductCard({ product, add }: { product: Product; add: (p: Product) => void }) {
   const image = product.images?.[0];
-  return <article className="product-card"><Link to={"/products/" + encodeURIComponent(product.slug)} className="product-image">{image ? <img src={image} alt={product.name} loading="lazy"/> : <div className="image-placeholder">ASRI</div>}</Link><div className="product-meta"><Link to={"/products/" + encodeURIComponent(product.slug)} className="product-name">{product.name}</Link><strong>{money(product.price_idr)}</strong>{(product.options?.length ?? 0) > 0 ? <Link className="text-button" to={"/products/" + encodeURIComponent(product.slug)}>Pilih opsi <ArrowRight size={14}/></Link> : <AsriButton variant="tertiary" className="text-button" disabled={product.stock_quantity < 1} onClick={() => add(product)}>Tambah ke keranjang <ArrowRight size={14}/></AsriButton>}</div></article>;
+  return <article className="product-card"><Link to={"/products/" + encodeURIComponent(product.slug)} className="product-image">{image ? <img src={image} alt={product.name} loading="lazy"/> : <div className="image-placeholder">ASRI</div>}</Link><div className="product-meta"><Link to={"/products/" + encodeURIComponent(product.slug)} className="product-name"><SfLink as="span" variant="secondary">{product.name}</SfLink></Link><strong>{money(product.price_idr)}</strong>{(product.options?.length ?? 0) > 0 ? <Link className="text-button" to={"/products/" + encodeURIComponent(product.slug)}>Pilih opsi <ArrowRight size={14}/></Link> : <AsriButton variant="tertiary" className="text-button" disabled={product.stock_quantity < 1} onClick={() => add(product)}>Tambah ke keranjang <ArrowRight size={14}/></AsriButton>}</div></article>;
 }
 function App() {
   const [cart, setCart] = useState<CartLine[]>(readCart);
