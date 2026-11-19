@@ -1,12 +1,13 @@
-import { useId, type ComponentProps } from "react";
+import { useId, type ChangeEventHandler, type ComponentProps } from "react";
 import { SfInput } from "@storefront-ui/react";
 
 type StorefrontInputProps = ComponentProps<typeof SfInput>;
-export interface AsriInputProps extends Omit<StorefrontInputProps, "invalid" | "id"> {
+export interface AsriInputProps extends Omit<StorefrontInputProps, "invalid" | "id" | "onChange"> {
   id?: string;
   label?: string;
   helperText?: string;
   error?: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
 }
 
 export function AsriInput({ id, label, helperText, error, className = "", ...props }: AsriInputProps) {
