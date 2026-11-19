@@ -1,12 +1,13 @@
-import { useId, type ComponentProps } from "react";
+import { useId, type ChangeEventHandler, type ComponentProps } from "react";
 import { SfSelect } from "@storefront-ui/react";
 
 type StorefrontSelectProps = ComponentProps<typeof SfSelect>;
-export interface AsriSelectProps extends Omit<StorefrontSelectProps, "invalid" | "id"> {
+export interface AsriSelectProps extends Omit<StorefrontSelectProps, "invalid" | "id" | "onChange"> {
   id?: string;
   label?: string;
   helperText?: string;
   error?: string;
+  onChange?: ChangeEventHandler<HTMLSelectElement>;
 }
 
 export function AsriSelect({ id, label, helperText, error, className = "", children, ...props }: AsriSelectProps) {
