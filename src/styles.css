@@ -90,3 +90,6 @@
 .asri-sf-input:disabled,
 .asri-sf-select:disabled,
 .asri-sf-textarea:disabled { opacity: .6; cursor: not-allowed; }
+
+.cart-icon-wrap { position: relative; display: inline-flex; align-items: center; justify-content: center; }
+.asri-sf-button:focus-visible { outline: 2px solid #78917c; outline-offset: 3px; }
