@@ -1,12 +1,13 @@
-import { useId, type ComponentProps } from "react";
+import { useId, type ChangeEventHandler, type ComponentProps } from "react";
 import { SfTextarea } from "@storefront-ui/react";
 
 type StorefrontTextareaProps = ComponentProps<typeof SfTextarea>;
-export interface AsriTextareaProps extends Omit<StorefrontTextareaProps, "invalid" | "id"> {
+export interface AsriTextareaProps extends Omit<StorefrontTextareaProps, "invalid" | "id" | "onChange"> {
   id?: string;
   label?: string;
   helperText?: string;
   error?: string;
+  onChange?: ChangeEventHandler<HTMLTextAreaElement>;
 }
 
 export function AsriTextarea({ id, label, helperText, error, className = "", ...props }: AsriTextareaProps) {
